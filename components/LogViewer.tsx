@@ -63,5 +63,5 @@ export function LogViewer({
     // Content
     //const all = verboseLogs.items.map((item) => new TextDecoder().decode(item)).join("\n");
 
-    return <p>{verboseLogs}</p>;
+    return <pre>{verboseLogs}</pre>;
 }

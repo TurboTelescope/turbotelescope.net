@@ -56,7 +56,7 @@ const Header: React.FC = () => {
                         <ul style={{ listStyle: "none", margin: 0, padding: "8px 0" }}>
                             <li>
                                 <Link
-                                    href="/pipeline-health"
+                                    href="/IHW"
                                     style={{
                                         display: "block",
                                         padding: "8px 16px",
@@ -64,7 +64,7 @@ const Header: React.FC = () => {
                                         color: "#333",
                                     }}
                                 >
-                                    Pipeline Health
+                                    Image Health Website
                                 </Link>
                             </li>
                             {/* <li>

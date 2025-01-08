@@ -35,7 +35,7 @@ export function RunsTable() {
                         <TableCell>
                             <Link
                                 href={{
-                                    pathname: `/pipeline-health/verbose-logs/${row.file.includes("tlenaii") ? "tlenaii" : "popcorn"}/${row.schemaName}`,
+                                    pathname: `/IHW/verbose-logs/${row.file.includes("tlenaii") ? "tlenaii" : "popcorn"}/${row.schemaName}`,
                                     // pathname: getLogURL(
                                     //     row.schemaName,
                                     //     row.file.includes("tlenaii") ? "tlenaii" : "popcorn"

@@ -7,7 +7,7 @@
         "check": "tsc -b tsconfig.json",
         "dev": "next dev --port 5001",
         "lint": "next lint",
-        "start": "next start"
+        "start": "next start --port 5001"
     },
     "dependencies": {
         "@effect-rx/rx": "0.34.5",
