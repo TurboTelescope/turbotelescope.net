@@ -1,3 +1,5 @@
+"use client";
+
 import { PipelineHealth } from "@/components/PipelineHealth";
 import { ThemeToggle } from "@/components/ThemeToggle";
 

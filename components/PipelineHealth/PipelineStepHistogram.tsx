@@ -1,3 +1,5 @@
+"use client";
+
 import { Array, Function, Option, Record, Schema, Tuple } from "effect";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 

@@ -1,13 +1,15 @@
+"use client";
+
 import { useRxSuspenseSuccess } from "@effect-rx/rx-react";
 import { DateTime } from "effect";
 
 import { tableDataRx } from "@/components/PipelineHealth/rx";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getDiffURL, getRefURL, getSciURL } from "@/lib/utils";
 import Link from "next/link";
-import { getSciURL, getRefURL, getDiffURL } from "@/lib/utils";
 //import { DropdownMenuIcon } from "@radix-ui/react-icons";
-import { DropdownMenuItem, DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
 export function RunsTable() {
     const tableData = useRxSuspenseSuccess(tableDataRx).value;

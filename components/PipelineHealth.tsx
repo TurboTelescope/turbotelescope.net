@@ -1,6 +1,6 @@
 "use client";
 
-import { useRx, useRxSet, useRxSuspenseSuccess } from "@effect-rx/rx-react";
+import { Result, useRx, useRxSet, useRxValue } from "@effect-rx/rx-react";
 import { DateTime } from "effect";
 import { Suspense, useMemo } from "react";
 
@@ -29,9 +29,13 @@ export function PipelineHealth() {
     useMemo(() => updateUntil(new Date()), [updateUntil]);
 
     // Gets
-    const from = useRxSuspenseSuccess(fromRx).value;
-    const until = useRxSuspenseSuccess(untilRx).value;
-    const totals = useRxSuspenseSuccess(totalsRx).value;
+    const from = useRxValue(fromRx);
+    const until = useRxValue(untilRx);
+    const totals = useRxValue(totalsRx);
+
+    if (!Result.isSuccess(from) || !Result.isSuccess(until) || !Result.isSuccess(totals)) {
+        return <p>Loading...</p>;
+    }
 
     return (
         <>
@@ -53,8 +57,8 @@ export function PipelineHealth() {
                 </div>
             </div>
             <span className="flex justify-center my-4 text-sm text-muted-foreground">
-                Selected {totals.totalRuns} images between {DateTime.formatIsoZoned(from)} and{" "}
-                {DateTime.formatIsoZoned(until)}
+                Selected {totals.value.totalRuns} images between {DateTime.formatIsoZoned(from.value)} and{" "}
+                {DateTime.formatIsoZoned(until.value)}
             </span>
 
             <Suspense fallback={<p>Loading...</p>}>
