@@ -1,7 +1,7 @@
 "use client";
 
 import { Result, Rx } from "@effect-rx/rx-react";
-import { FetchHttpClient, HttpClient, HttpClientError } from "@effect/platform";
+import { FetchHttpClient, HttpClient } from "@effect/platform";
 import {
     Array,
     Cause,
@@ -18,7 +18,6 @@ import {
     Option,
     Record,
     Schema,
-    Scope,
     Sink,
     Stream,
 } from "effect";
@@ -111,7 +110,7 @@ export const activeDataRx = Rx.make<"success" | "failure">("success" as const);
 // aggregateByRx tracks the time unit that the user has selected to aggregate the time series data by
 export const aggregateByRx = Rx.make<Exclude<DateTime.DateTime.UnitPlural, "millis">>("days");
 
-//Creating list of Pipeline to select from when querrying
+// creating list of Pipeline to select from when querying
 export const steps2queryRx = Rx.make<Set<typeof ShortPipelineName.to.Type>>(new Set(ShortPipelineName.to.literals));
 
 // ------------------------------------------------------------
@@ -120,10 +119,7 @@ export const steps2queryRx = Rx.make<Set<typeof ShortPipelineName.to.Type>>(new 
 
 // Fetches all the rows from the database in the time range
 export const rowsRx: Rx.RxResultFn<void, Array<ResultRow>, never> = runtime.fn(
-    (
-        _: void,
-        ctx: Rx.Context
-    ): Effect.Effect<Array<ResultRow>, never, HttpClient.HttpClient<HttpClientError.HttpClientError, Scope.Scope>> =>
+    (_: void, ctx: Rx.Context): Effect.Effect<Array<ResultRow>, never, HttpClient.HttpClient> =>
         Effect.Do.pipe(
             Effect.bind("from", () => ctx.result(fromRx)),
             Effect.bind("until", () => ctx.result(untilRx)),
