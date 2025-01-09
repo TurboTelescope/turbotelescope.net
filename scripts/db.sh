@@ -14,6 +14,6 @@ pg_restore \
     --no-owner \
     --no-privileges \
     --no-tablespaces \
-    /workspaces/turbotelescope.net/scripts/turbo_db_2024_10_24.dump
+    ./scripts/turbo_db_2024_10_24.dump
 
 psql "postgresql://postgres:password@postgres:5432/turbo" -c "CREATE ROLE turbogroup;"
