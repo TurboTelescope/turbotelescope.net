@@ -3,13 +3,16 @@
         "clsx",
         "codegen",
         "compat",
+        "devcontainers",
         "Fltr",
         "lightcurve",
         "lucide",
         "milli",
         "Millis",
         "mssgill",
+        "neondatabase",
         "packagejson",
+        "pgdg",
         "rpcs",
         "Sfft",
         "skyportal",
@@ -18,6 +21,8 @@
         "tlenaii",
         "tupled",
         "turbopack",
+        "turbotelescope",
+        "wsproxy",
         "zeropoint"
     ]
 }
