@@ -1,8 +1,8 @@
 "use client";
 
 import { Result, Rx, useRxSet, useRxSuspenseSuccess } from "@effect-rx/rx-react";
-import { FetchHttpClient, HttpClient, HttpClientError } from "@effect/platform";
-import { Effect, Scope, Stream } from "effect";
+import { FetchHttpClient, HttpClient } from "@effect/platform";
+import { Effect, Stream } from "effect";
 
 import { rpcClient } from "@/app/api/client";
 import { SchemaName, VerboseLogRequest, VerboseLogURLRequest } from "@/services/Domain";
@@ -16,9 +16,7 @@ const schemaNameRx = Rx.make<typeof SchemaName.from.Type>(
 );
 
 const _verboseLogRx: Rx.Writable<Rx.PullResult<Uint8Array, never>, void> = runtime.pull(
-    (
-        context: Rx.Context
-    ): Stream.Stream<Uint8Array, never, HttpClient.HttpClient<HttpClientError.HttpClientError, Scope.Scope>> =>
+    (context: Rx.Context): Stream.Stream<Uint8Array, never, HttpClient.HttpClient> =>
         Stream.Do.pipe(
             Stream.let("machine", () => context.get(machineRx)),
             Stream.let("schemaName", () => context.get(schemaNameRx)),
@@ -32,9 +30,7 @@ const _verboseLogRx: Rx.Writable<Rx.PullResult<Uint8Array, never>, void> = runti
 );
 
 const verboseLogURLRx: Rx.Rx<Result.Result<string, never>> = runtime.rx(
-    (
-        context: Rx.Context
-    ): Effect.Effect<string, never, HttpClient.HttpClient<HttpClientError.HttpClientError, Scope.Scope>> =>
+    (context: Rx.Context): Effect.Effect<string, never, HttpClient.HttpClient> =>
         Effect.Do.pipe(
             Effect.let("machine", () => context.get(machineRx)),
             Effect.let("schemaName", () => context.get(schemaNameRx)),
