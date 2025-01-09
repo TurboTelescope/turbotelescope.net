@@ -9,11 +9,6 @@ curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearm
 sudo apt update -y
 sudo apt install -y postgresql-16
 
-# https://github.com/devcontainers/features/pull/770
-SHELL="$(which bash)" pnpm setup
-source /home/vscode/.bashrc
-pnpm config set store-dir $PNPM_HOME/store
-
 echo "Initializing submodules"
 git submodule update --init --recursive
 
@@ -24,9 +19,6 @@ pnpm install
 
 echo "🏗️ Building..."
 pnpm build
-
-echo "🧪 Testing..."
-# pnpm test
 
 echo "✅ Devcontainer setup complete!"
 echo "🙏 Thank you for contributing to turbotelescope.net!"

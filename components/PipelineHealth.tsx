@@ -1,6 +1,6 @@
 "use client";
 
-import { Result, useRx, useRxSet, useRxSuspenseSuccess, useRxValue } from "@effect-rx/rx-react";
+import { Result, useRx, useRxSet, useRxValue } from "@effect-rx/rx-react";
 import { DateTime } from "effect";
 import { Suspense, useMemo } from "react";
 
@@ -11,21 +11,31 @@ import { PipelineStepHistogram } from "@/components/PipelineHealth/PipelineStepH
 import { AverageProcessingTimeLineChart } from "@/components/PipelineHealth/RunTimeHist";
 import { RunsTable } from "@/components/PipelineHealth/Table";
 import { fromRx, rowsRx, timeSeriesGroupedRx, totalsRx, untilRx } from "@/components/PipelineHealth/rx";
+import { LocaleSelector } from "./PipelineHealth/LocaleSelector";
+import { Steps2querySelector } from "./PipelineHealth/StepsFilter";
 
 export function PipelineHealth() {
     // Sets
     const [_rows, pullRows] = useRx(rowsRx);
-    useMemo(pullRows, []);
+    useMemo(pullRows, [pullRows]);
 
     const pullTimeSeriesData = useRxSet(timeSeriesGroupedRx);
-    useMemo(pullTimeSeriesData, []);
+    useMemo(pullTimeSeriesData, [pullTimeSeriesData]);
+
+    const updateFrom = useRxSet(fromRx);
+    useMemo(() => updateFrom(new Date("2024-11-19")), [updateFrom]);
+
+    const updateUntil = useRxSet(untilRx);
+    useMemo(() => updateUntil(new Date()), [updateUntil]);
 
     // Gets
-    const from = useRxValue(fromRx).pipe(Result.getOrThrow);
-    const until = useRxValue(untilRx).pipe(Result.getOrThrow);
+    const from = useRxValue(fromRx);
+    const until = useRxValue(untilRx);
+    const totals = useRxValue(totalsRx);
 
-    // Suspenses
-    const totals = useRxSuspenseSuccess(totalsRx).value;
+    if (!Result.isSuccess(from) || !Result.isSuccess(until) || !Result.isSuccess(totals)) {
+        return <p>Loading...</p>;
+    }
 
     return (
         <>
@@ -39,9 +49,16 @@ export function PipelineHealth() {
                 <div className="mx-1">
                     <EmptyBucketsToggle />
                 </div>
+                <div className="mx-1">
+                    <LocaleSelector />
+                </div>
+                <div className="mx-1">
+                    <Steps2querySelector />
+                </div>
             </div>
             <span className="flex justify-center my-4 text-sm text-muted-foreground">
-                Selected {totals.totalRuns} runs between {DateTime.formatIso(from)} and {DateTime.formatIso(until)}
+                Selected {totals.value.totalRuns} images between {DateTime.formatIsoZoned(from.value)} and{" "}
+                {DateTime.formatIsoZoned(until.value)}
             </span>
 
             <Suspense fallback={<p>Loading...</p>}>

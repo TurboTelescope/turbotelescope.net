@@ -1,10 +1,18 @@
-import { FetchHttpClient, HttpClient, HttpClientError, HttpClientRequest } from "@effect/platform";
-import { Effect, Function } from "effect";
+import {
+    FetchHttpClient,
+    HttpClient,
+    HttpClientError,
+    HttpClientRequest,
+    HttpClientResponse,
+    FileSystem,
+    Error as PlatformError,
+} from "@effect/platform";
+import { Effect, Function, Stream, String } from "effect";
 
 import { SchemaName, splitLiteral, tail } from "@/services/Domain";
 
-const popcornServer = "http://popcorn-logs.turbotelescope.net:54321";
-const tlenaiiServer = "http://tlenaii-logs.turbotelescope.net:54322";
+const popcornServer = "/mnt/14tb_turbo_disk/users/mssgill/pipeline/logging_folder/";
+const tlenaiiServer = "/home/tlenaii/pipeline_work/pipeline/logging_folder/";
 
 const make = Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient;
@@ -18,7 +26,7 @@ const make = Effect.gen(function* () {
     const fetchLog = (
         schemaName: typeof SchemaName.from.Type,
         machine: "tlenaii" | "popcorn"
-    ): Effect.Effect<string, HttpClientError.HttpClientError, never> => {
+    ): Stream.Stream<Uint8Array, HttpClientError.HttpClientError, never> => {
         const splitAndDropFirst4 = Function.flow(splitLiteral, tail, tail, tail, tail);
         const [monthString, dayString, yearString, hoursString, minutesString, secondsString] = splitAndDropFirst4(
             schemaName,
@@ -26,7 +34,7 @@ const make = Effect.gen(function* () {
         );
 
         const timeParts =
-            `${monthString}_${dayString}_${yearString}_${hoursString}_${minutesString}_${secondsString}` as const;
+            `${yearString}_${monthString}_${dayString}_${hoursString}_${minutesString}_${secondsString}` as const;
 
         const server = machine === "tlenaii" ? tlenaiiServer : popcornServer;
         const location = `Light_weight_pipeline_${timeParts}` as const;
@@ -34,12 +42,34 @@ const make = Effect.gen(function* () {
         return Function.pipe(
             HttpClientRequest.get(server + "/" + location + "/" + "verbose_log.txt"),
             client.execute,
-            Effect.flatMap(({ text }) => text),
-            Effect.scoped
+            HttpClientResponse.stream
         );
     };
 
-    return { fetchLog } as const;
+    const getLogURL = (
+        schemaName: typeof SchemaName.from.Type,
+        machine: "tlenaii" | "popcorn"
+    ): Effect.Effect<string, PlatformError.PlatformError, FileSystem.FileSystem> => {
+        const splitAndDropFirst4 = Function.flow(splitLiteral, tail, tail, tail, tail);
+        const stripLeadingZeros = String.replace(/^0*/gm, String.empty);
+        const [monthString, dayString, yearString, hoursString, minutesString, secondsString] = splitAndDropFirst4(
+            schemaName,
+            "_"
+        );
+
+        const timeParts =
+            `${yearString}_${stripLeadingZeros(monthString)}_${stripLeadingZeros(dayString)}_${stripLeadingZeros(hoursString)}_${minutesString}_${secondsString}` as const;
+
+        const server = machine === "tlenaii" ? tlenaiiServer : popcornServer;
+        const location = `Light_weight_pipeline_${timeParts}` as const;
+        const data = Effect.flatMap(FileSystem.FileSystem, (fs) =>
+            fs.readFileString(server + location + "/verbose_log.txt")
+        );
+        return data;
+        //return Effect.succeed(server + "/" + location + "/" + "verbose_log.txt");
+    };
+
+    return { fetchLog, getLogURL } as const;
 });
 
 export class VerboseLogs extends Effect.Service<VerboseLogs>()("app/VerboseLogs", {

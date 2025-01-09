@@ -57,5 +57,5 @@
         }
     },
 
-    "postCreateCommand": "bash -i -c '/workspaces/turbotelescope.net/.devcontainer/setup.sh'"
+    "postCreateCommand": "bash -i -c './.devcontainer/setup.sh'"
 }
