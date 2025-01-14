@@ -1,9 +1,9 @@
 "use client";
 
-import { useRxSuspenseSuccess } from "@effect-rx/rx-react";
+import { useRxSuspenseSuccess, useRxValue } from "@effect-rx/rx-react";
 import { DateTime } from "effect";
 
-import { tableDataRx } from "@/components/PipelineHealth/rx";
+import { steps2queryRx, tableDataRx } from "@/components/PipelineHealth/rx";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getDiffURL, getRefURL, getSciURL } from "@/lib/utils";
 import Link from "next/link";
@@ -13,6 +13,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 export function RunsTable() {
     const tableData = useRxSuspenseSuccess(tableDataRx).value;
+    const steps2query = useRxValue(steps2queryRx);
+    const filterTableData = tableData.filter((value) => steps2query.has(value.status));
 
     return (
         <Table>
@@ -28,7 +30,7 @@ export function RunsTable() {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {tableData.map((row, index) => (
+                {filterTableData.map((row, index) => (
                     <TableRow key={index}>
                         <TableCell className="font-medium">{DateTime.formatIso(row.run)}</TableCell>
                         <TableCell>{row.status}</TableCell>

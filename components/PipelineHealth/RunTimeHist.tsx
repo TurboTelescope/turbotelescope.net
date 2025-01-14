@@ -21,6 +21,7 @@ const chart2 = "averageSuccessProcessingTime" as const;
 const chart3 = "averageFailureProcessingTime" as const;
 const chart4 = "numberOfSuccessfulRuns" as const;
 const chart5 = "numberOfFailedRuns" as const;
+const chart6 = "averageProcessingTimeAllRuns" as const;
 
 export const chartConfigs = {
     [chart1]: {
@@ -51,6 +52,11 @@ export const chartConfigs = {
         title: "Number of Successful Runs",
         label: "Number of Succcessful Runs",
         icon: CheckIcon,
+    },
+    [chart6]: {
+        color: "#FFFFFF",
+        title: "All Runs",
+        label: "Average Processing Time",
     },
 } satisfies ChartConfig;
 
@@ -83,8 +89,9 @@ export function AverageProcessingTimeLineChart() {
 
     // Data mapping
     const chartTotals = {
-        [chart2]: totals.value.successRate,
-        [chart3]: totals.value.failureRate,
+        [chart2]: `${totals.value.successRate.toFixed(1)}%`,
+        [chart3]: `${totals.value.failureRate.toFixed(1)}%`,
+        [chart6]: "Show All",
     };
     const chartData: MappedData = Record.values(
         Record.map(
@@ -99,7 +106,7 @@ export function AverageProcessingTimeLineChart() {
             })
         )
     );
-    const activeChartKey = activeChart === "success" ? chart2 : chart3;
+    const activeChartKey = activeChart === "All" ? chart6 : activeChart === "success" ? chart2 : chart3;
     // Chart implementation
     return (
         <Card>
@@ -111,22 +118,22 @@ export function AverageProcessingTimeLineChart() {
                     </CardDescription>
                 </div>
                 <div className="flex">
-                    {[chart2, chart3].map((chart) => {
+                    {[chart2, chart3, chart6].map((chart) => {
                         return (
                             <button
                                 key={chart}
                                 data-active={chart.toLocaleLowerCase().includes(activeChart)}
                                 className="flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
                                 onClick={() =>
-                                    chart === "averageSuccessProcessingTime"
-                                        ? setActiveChart("success")
-                                        : setActiveChart("failure")
+                                    chart === "averageProcessingTimeAllRuns"
+                                        ? setActiveChart("All")
+                                        : chart === "averageSuccessProcessingTime"
+                                          ? setActiveChart("success")
+                                          : setActiveChart("failure")
                                 }
                             >
                                 <span className="text-xs text-muted-foreground">{chartConfigs[chart].title}</span>
-                                <span className="text-lg font-bold leading-none sm:text-3xl">
-                                    {chartTotals[chart].toFixed(1)}%
-                                </span>
+                                <span className="text-lg font-bold leading-none sm:text-3xl">{chartTotals[chart]}</span>
                             </button>
                         );
                     })}
@@ -198,13 +205,42 @@ export function AverageProcessingTimeLineChart() {
                             align="left"
                             height={36}
                         />
-                        <Bar
-                            key={activeChart === "success" ? `${chart2}-bar` : `${chart3}-bar`}
-                            dataKey={activeChart === "success" ? chart2 : chart3}
-                            type="monotone"
-                            fill={`var(--color-${activeChart === "success" ? chart2 : chart3})`}
-                            fillOpacity={0.5}
-                        />
+
+                        {activeChart === "All" ? (
+                            <Bar
+                                key={`${chart6}.${chart2}-bar`}
+                                dataKey={`${chart2}`}
+                                type="monotone"
+                                fill={`var(--color-${chart2})`}
+                                fillOpacity={0.5}
+                            />
+                        ) : (
+                            <></>
+                        )}
+                        {activeChart === "All" ? (
+                            <Bar
+                                key={`${chart6}.${chart3}-bar`}
+                                dataKey={`${chart3}`}
+                                type="monotone"
+                                fill={`var(--color-${chart3})`}
+                                fillOpacity={0.5}
+                            />
+                        ) : (
+                            <></>
+                        )}
+
+                        {activeChart !== "All" ? (
+                            <Bar
+                                key={activeChart === "success" ? `${chart2}-bar` : `${chart3}-bar`}
+                                dataKey={activeChart === "success" ? chart2 : chart3}
+                                type="monotone"
+                                fill={`var(--color-${activeChart === "success" ? chart2 : chart3})`}
+                                fillOpacity={0.5}
+                            />
+                        ) : (
+                            <></>
+                        )}
+
                         <Line
                             dataKey={chart1}
                             type="monotone"
@@ -213,6 +249,7 @@ export function AverageProcessingTimeLineChart() {
                             strokeDasharray={"3 3"}
                             dot={false}
                         />
+
                         {/* Enables Chart of Hover based on active chart */}
                         {activeChart === "success" ? (
                             <Line dataKey={chart4} hide />

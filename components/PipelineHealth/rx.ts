@@ -105,7 +105,7 @@ export const includeEmptyBucketsRx = Rx.make<true | false>(false);
 export const activeLabelRx = Rx.make<string | undefined>(undefined);
 
 // activeDataRx tracks whether the user is looking at successful or failed runs
-export const activeDataRx = Rx.make<"success" | "failure">("success" as const);
+export const activeDataRx = Rx.make<"success" | "failure" | "All">("All" as const);
 
 // aggregateByRx tracks the time unit that the user has selected to aggregate the time series data by
 export const aggregateByRx = Rx.make<Exclude<DateTime.DateTime.UnitPlural, "millis">>("days");
@@ -288,7 +288,8 @@ export const tableDataRx: Rx.Rx<
             file:
                 | `${string}telescope_g_${string}_${string}_${number}_${string}.fits`
                 | `${string}telescope_r_${string}_${string}_${number}_${string}.fits`;
-            status: string;
+            status: typeof ShortPipelineName.to.Type;
+            message: string;
             run: DateTime.Utc;
             processingTime: number;
             schemaName: typeof SchemaName.Encoded;
@@ -303,7 +304,8 @@ export const tableDataRx: Rx.Rx<
             file:
                 | `${string}telescope_g_${string}_${string}_${number}_${string}.fits`
                 | `${string}telescope_r_${string}_${string}_${number}_${string}.fits`;
-            status: string;
+            status: typeof ShortPipelineName.to.Type;
+            message: string;
             run: DateTime.Utc;
             processingTime: number;
             schemaName: typeof SchemaName.Encoded;
@@ -321,13 +323,19 @@ export const tableDataRx: Rx.Rx<
                 Option.getOrElse(() => ({ entries: Array.empty<ResultRow>() })),
                 ({ entries }) => entries
             );
-
-            return Array.map(selectedRows, (row) => ({
-                run: row.date,
-                file: row.filePath,
-                status: row.completion,
-                schemaName: row.sourceTable,
-                processingTime: row.processingTime,
-            }));
+            const a = Array.map(selectedRows, (row) =>
+                Effect.gen(function* () {
+                    const shortPipelineStep = yield* Schema.decode(ShortPipelineName)(row.pipelineStep);
+                    return {
+                        run: row.date,
+                        file: row.filePath,
+                        message: row.completion,
+                        status: shortPipelineStep,
+                        schemaName: row.sourceTable,
+                        processingTime: row.processingTime,
+                    };
+                })
+            );
+            return yield* Effect.all(a).pipe(Effect.orDie);
         })
 );
