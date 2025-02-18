@@ -13,6 +13,7 @@ echo "Initializing submodules"
 git submodule update --init --recursive
 
 echo "📦 Installing repo dependencies..."
+npm install --global corepack@latest
 corepack install
 corepack enable
 pnpm install
