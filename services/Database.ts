@@ -97,9 +97,7 @@ const make = Effect.gen(function* () {
             Effect.flatMap(({ resolver, tableNamesInRange }) =>
                 Function.pipe(
                     tableNamesInRange,
-                    Array.map((tableName) => Tuple.make(tableName, undefined)),
-                    Record.fromEntries,
-                    Record.map((_, tableName) => resolver.execute(tableName)),
+                    Record.fromIterableWith((tableName) => Tuple.make(tableName, resolver.execute(tableName))),
                     Effect.allWith({ batching: true })
                 )
             )
