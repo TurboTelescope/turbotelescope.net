@@ -1,8 +1,16 @@
+/**
+ * Run with:
+ *
+ *      POSTGRES_URL="postgres://postgres:password@postgres:5432/turbo?sslmode=require"
+ *      npx tsx ./scripts/CheckPipelineStepNames.ts
+ */
+
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
 import { SqlClient } from "@effect/sql";
-import { Array, Console, DateTime, Effect, Function, HashSet } from "effect";
+import { Array, Console, DateTime, Effect, Function, HashSet, Schema } from "effect";
 
 import * as Database from "../services/Database.js";
+import * as Domain from "../services/Domain.js";
 
 const program = Effect.gen(function* () {
     const db = yield* Database.Database;
@@ -24,7 +32,15 @@ const program = Effect.gen(function* () {
         Effect.map(HashSet.fromIterable)
     );
 
-    yield* Console.log(names);
+    // Uncomment to see all the names
+    // yield* Console.log(names);
+
+    for (const name of names) {
+        const check = Schema.is(Domain.PipelineStepName);
+        if (!check(name)) {
+            yield* Console.log(`pipeline step name "${name}" is not handled`);
+        }
+    }
 });
 
 Effect.suspend(() => program)
