@@ -112,7 +112,7 @@ export function AverageProcessingTimeLineChart() {
         <Card>
             <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
                 <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
-                    <CardTitle>Average processing time per day</CardTitle>
+                    <CardTitle>Average processing time per {aggregateBy}</CardTitle>
                     <CardDescription>
                         Showing the average processing time for {activeChart} runs grouped by {aggregateBy}
                     </CardDescription>
