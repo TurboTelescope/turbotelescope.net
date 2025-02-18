@@ -104,6 +104,7 @@ const make = Effect.gen(function* () {
         );
 
     const subscribeToDataInRange = (
+        from: DateTime.Utc,
         refreshInterval: Duration.DurationInput
     ): Stream.Stream<
         Record.ReadonlyRecord<typeof SchemaName.Encoded, Array<ResultRow>>,
@@ -113,14 +114,17 @@ const make = Effect.gen(function* () {
         Effect.gen(function* () {
             type TupledFromUntil = [from: DateTime.Utc, until: DateTime.Utc];
 
-            const now = yield* DateTime.now;
             const applyRefreshInterval = DateTime.addDuration(refreshInterval);
+            const now = yield* Effect.map(DateTime.now, DateTime.subtractDuration(refreshInterval));
 
+            const resolver = Function.tupled(getDataInRange);
             const initial: TupledFromUntil = Tuple.make(now, applyRefreshInterval(now));
             const next = ([_, previousNow]: TupledFromUntil): TupledFromUntil =>
                 Tuple.make(previousNow, applyRefreshInterval(previousNow));
 
-            return Stream.iterate(initial, next).pipe(Stream.mapEffect(Function.tupled(getDataInRange)));
+            const backlog = Stream.fromEffect(getDataInRange(from, now));
+            const reactive = Stream.iterate(initial, next).pipe(Stream.mapEffect(resolver));
+            return Stream.concat(backlog, reactive);
         }).pipe(Stream.unwrap);
 
     return { getDataInRange, subscribeToDataInRange, getTableNamesInRange } as const;

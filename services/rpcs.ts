@@ -14,9 +14,9 @@ export const databaseRouter = RpcRouter.make(
     Rpc.effect(RunsInTimeRangeRequest, ({ from, until }) =>
         Effect.flatMap(Database, (database) => database.getDataInRange(from, until)).pipe(Effect.orDie)
     ),
-    Rpc.stream(SubscribeToRunsRequest, ({ refreshInterval }) =>
+    Rpc.stream(SubscribeToRunsRequest, ({ from, refreshInterval }) =>
         Function.pipe(
-            Effect.map(Database, (database) => database.subscribeToDataInRange(refreshInterval)),
+            Effect.map(Database, (database) => database.subscribeToDataInRange(from, refreshInterval)),
             Stream.unwrap,
             Stream.orDie
         )

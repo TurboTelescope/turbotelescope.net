@@ -280,7 +280,7 @@ export class RunsInTimeRangeRequest extends Schema.TaggedRequest<RunsInTimeRange
 export class SubscribeToRunsRequest extends Rpc.StreamRequest<SubscribeToRunsRequest>()("SubscribeToRunsRequest", {
     failure: Schema.Never,
     success: Schema.Record({ key: SchemaName.from, value: Schema.Array(ResultRow) }),
-    payload: { refreshInterval: Schema.DurationFromSelf },
+    payload: { from: Schema.DateTimeUtc, refreshInterval: Schema.DurationFromSelf },
 }) {}
 
 export class VerboseLogRequest extends Rpc.StreamRequest<VerboseLogRequest>()("VerboseLogRequest", {
