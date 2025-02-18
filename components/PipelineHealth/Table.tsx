@@ -1,15 +1,71 @@
 "use client";
 
+import { steps2queryRx, tableDataRx } from "@/components/PipelineHealth/rx";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { splitLiteral } from "@/services/Domain";
 import { useRxSuspenseSuccess, useRxValue } from "@effect-rx/rx-react";
 import { DateTime } from "effect";
-
-import { steps2queryRx, tableDataRx } from "@/components/PipelineHealth/rx";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getDiffURL, getRefURL, getSciURL } from "@/lib/utils";
-import Link from "next/link";
-//import { DropdownMenuIcon } from "@radix-ui/react-icons";
 import { ChevronDown } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import Link from "next/link";
+
+export const getSciURL = (filePath: string): string => {
+    const start = filePath.indexOf("telescope_");
+    const end = filePath.lastIndexOf(".fits");
+
+    if (start !== -1 && end !== -1 && end > start) {
+        const ImgName = filePath.substring(start + "telescope_".length, end);
+        return "http://popcorn.spa.umn.edu/center_cutouts/sci_cutouts/centcut_telescope_" + ImgName + ".webp";
+    } else {
+        return "http://popcorn.spa.umn.edu/center_cutouts/sci_cutouts/error";
+    }
+};
+
+export const getDiffURL = (filePath: string): string => {
+    const start = filePath.indexOf("telescope_");
+    const end = filePath.lastIndexOf(".fits");
+
+    if (start !== -1 && end !== -1 && end > start) {
+        const ImgName = filePath.substring(start + "telescope_".length, end);
+        return "http://popcorn.spa.umn.edu/center_cutouts/diff_cutouts/diff_centcut_telescope_" + ImgName + ".webp";
+    } else {
+        return "http://popcorn.spa.umn.edu/center_cutouts/sci_cutouts/error";
+    }
+};
+
+//M82 ref is differnt from all other ref types.pipe(
+//others: "name_number", i.e. IC_1613"
+//M82: "M82"
+export const getRefURL = (
+    filePath:
+        | `${string}telescope_g_${string}_${string}_${number}_${string}.fits`
+        | `${string}telescope_r_${string}_${string}_${number}_${string}.fits`
+): string => {
+    const test = splitLiteral(filePath, "telescope_")[1];
+    const [redOrGreen, a, b] = splitLiteral(test, "_");
+    if (b == "2025" || b == "2024") {
+        return (
+            "http://popcorn.spa.umn.edu/center_cutouts/ref_cutouts/ref_centcut_telescope_" +
+            redOrGreen +
+            "_" +
+            a +
+            ".webp"
+        );
+    }
+    return (
+        "http://popcorn.spa.umn.edu/center_cutouts/ref_cutouts/ref_centcut_telescope_" +
+        redOrGreen +
+        "_" +
+        a +
+        b +
+        ".webp"
+    );
+};
 
 export function RunsTable() {
     const tableData = useRxSuspenseSuccess(tableDataRx).value;
@@ -40,10 +96,6 @@ export function RunsTable() {
                             <Link
                                 href={{
                                     pathname: `/IHW/verbose-logs/${row.file.includes("tlenaii") ? "tlenaii" : "popcorn"}/${row.schemaName}`,
-                                    // pathname: getLogURL(
-                                    //     row.schemaName,
-                                    //     row.file.includes("tlenaii") ? "tlenaii" : "popcorn"
-                                    // ),
                                 }}
                                 target="_blank"
                             >

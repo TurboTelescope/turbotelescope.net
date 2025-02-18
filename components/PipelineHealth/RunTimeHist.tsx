@@ -1,6 +1,6 @@
 "use client";
 
-import { Result, useRx, useRxSet, useRxSuspense, useRxValue } from "@effect-rx/rx-react";
+import { useRx, useRxSet, useRxSuspenseSuccess, useRxValue } from "@effect-rx/rx-react";
 import { CheckIcon, Cross2Icon, DotFilledIcon } from "@radix-ui/react-icons";
 import { DateTime, Function, Option, Record } from "effect";
 import { Bar, CartesianGrid, ComposedChart, Legend, Line, XAxis, YAxis } from "recharts";
@@ -50,7 +50,7 @@ export const chartConfigs = {
     [chart4]: {
         color: "#FF0000",
         title: "Number of Successful Runs",
-        label: "Number of Succcessful Runs",
+        label: "Number of Successful Runs",
         icon: CheckIcon,
     },
     [chart6]: {
@@ -72,25 +72,20 @@ export type MappedData = Array<{
 export function AverageProcessingTimeLineChart() {
     // Gets
     const aggregateBy = useRxValue(aggregateByRx);
-    const locale = useRxValue(localeRx);
+    const _locale = useRxSuspenseSuccess(localeRx).value;
 
     // Sets
     const setActiveLabel = useRxSet(activeLabelRx);
     const [activeChart, setActiveChart] = useRx(activeDataRx);
 
     // Suspends
-    const totals = useRxSuspense(totalsRx);
-    const timeSeriesData = useRxSuspense(timeSeriesGroupedRx);
-
-    // Error handling
-    if (!Result.isSuccess(timeSeriesData) || !Result.isSuccess(totals) || !Result.isSuccess(locale)) {
-        return <p>BAD</p>;
-    }
+    const totals = useRxSuspenseSuccess(totalsRx).value;
+    const timeSeriesData = useRxSuspenseSuccess(timeSeriesGroupedRx).value;
 
     // Data mapping
     const chartTotals = {
-        [chart2]: `${totals.value.successRate.toFixed(1)}%`,
-        [chart3]: `${totals.value.failureRate.toFixed(1)}%`,
+        [chart2]: `${totals.successRate.toFixed(1)}%`,
+        [chart3]: `${totals.failureRate.toFixed(1)}%`,
         [chart6]: "Show All",
     };
     const chartData: MappedData = Record.values(

@@ -2,14 +2,13 @@
 
 import { Result, useRx, useRxValue } from "@effect-rx/rx-react";
 import { format } from "date-fns";
-import { DateTime, Predicate } from "effect";
+import { DateTime } from "effect";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { HTMLAttributes, useState } from "react";
 import { DateRange } from "react-day-picker";
 
 import { fromRx, localeRx, untilRx } from "@/components/PipelineHealth/rx";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -50,7 +49,7 @@ export function DatePickerWithRange({ className }: HTMLAttributes<HTMLDivElement
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
+                    {/* <Calendar
                         initialFocus
                         mode="range"
                         defaultMonth={date?.from}
@@ -62,7 +61,7 @@ export function DatePickerWithRange({ className }: HTMLAttributes<HTMLDivElement
                         }}
                         numberOfMonths={2}
                         // timeZone="America/Chicago"
-                    />
+                    /> */}
                 </PopoverContent>
             </Popover>
         </div>
