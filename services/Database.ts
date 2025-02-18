@@ -125,7 +125,7 @@ const make = Effect.gen(function* () {
             return Stream.iterate(initial, next).pipe(Stream.mapEffect(Function.tupled(getDataInRange)));
         }).pipe(Stream.unwrap);
 
-    return { getDataInRange, subscribeToDataInRange } as const;
+    return { getDataInRange, subscribeToDataInRange, getTableNamesInRange } as const;
 });
 
 export class Database extends Effect.Service<Database>()("app/Database", {

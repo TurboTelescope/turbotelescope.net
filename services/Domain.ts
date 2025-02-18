@@ -201,10 +201,7 @@ export class ShortPipelineName extends Schema.transform(
                 Match.when("Basic data reduction", () => "Data Reduction" as const),
                 Match.when("Subtract Background and generate source cat", () => "Subtract" as const),
                 Match.when("filter image by the shape of sources", () => "Fltr Shape" as const),
-                Match.whenOr(
-                    "Assign Reference from file",
-                    "Assign Reference",
-                     () => "Assign Ref" as const),
+                Match.whenOr("Assign Reference from file", "Assign Reference", () => "Assign Ref" as const),
                 Match.whenOr(
                     "Align ref to sci and propagate wcs from ref to sci",
                     "Align ref to sci and propogate wcs from ref to sci",
