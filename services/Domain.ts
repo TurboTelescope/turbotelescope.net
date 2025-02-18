@@ -130,19 +130,19 @@ export class PipelineStepName extends Schema.Literal(
     "Assign Reference from file",
     "Assign Reference",
     "Align ref to sci and propagate wcs from ref to sci",
-    "Align ref to sci and propagate wcs from ref to sci",
     "Run Sfft Subtraction",
     "Extract sources from difference image",
-    "Grabbing catalogs for this region of sky",
     "Filter out candidates close to stars ",
-    "Filter out blurry imgs",
     "Calculate zeropoint of image",
     "Calculate real-bogus score for candidates",
     "Making cutouts ",
-    "make_lightcurve",
     "save the image",
 
-    // Old names
+    // TODO: Find where to insert these in the order:
+    "Finding the five sigma upper limit of magnitude",
+    "Post annotations from MPC query",
+
+    // "Retired" steps
     "skyportal_logging",
     "Align ref to sci and propogate wcs from ref to sci",
     "Create bad pixel mask from raw image"
@@ -161,15 +161,16 @@ export class ShortPipelineName extends Schema.transform(
         "Align Ref",
         "Run Sfft",
         "Extract Sources",
-        "Catalogs",
         "Fltr Near Stars",
-        "Flr Blurry Imgs",
         "Zero Point",
         "Real-Bogus",
         "Cutouts",
-        "Lightcurve",
         "Save",
-        "Skyportal"
+        "Skyportal",
+
+        // TODO: Find where to insert these in the order:
+        "Five Sigma",
+        "MPC Query"
     ),
     {
         encode: (shortName) =>
@@ -183,15 +184,14 @@ export class ShortPipelineName extends Schema.transform(
                 Match.when("Align Ref", () => "Align ref to sci and propagate wcs from ref to sci" as const),
                 Match.when("Run Sfft", () => "Run Sfft Subtraction" as const),
                 Match.when("Extract Sources", () => "Extract sources from difference image" as const),
-                Match.when("Catalogs", () => "Grabbing catalogs for this region of sky" as const),
                 Match.when("Fltr Near Stars", () => "Filter out candidates close to stars " as const),
-                Match.when("Flr Blurry Imgs", () => "Filter out blurry imgs" as const),
                 Match.when("Zero Point", () => "Calculate zeropoint of image" as const),
                 Match.when("Real-Bogus", () => "Calculate real-bogus score for candidates" as const),
                 Match.when("Cutouts", () => "Making cutouts " as const),
-                Match.when("Lightcurve", () => "make_lightcurve" as const),
                 Match.when("Save", () => "save the image" as const),
                 Match.when("Skyportal", () => "skyportal_logging" as const),
+                Match.when("Five Sigma", () => "Finding the five sigma upper limit of magnitude" as const),
+                Match.when("MPC Query", () => "Post annotations from MPC query" as const),
                 Match.exhaustive
             ),
         decode: (longName) =>
@@ -209,16 +209,15 @@ export class ShortPipelineName extends Schema.transform(
                 ),
                 Match.when("Run Sfft Subtraction", () => "Run Sfft" as const),
                 Match.when("Extract sources from difference image", () => "Extract Sources" as const),
-                Match.when("Grabbing catalogs for this region of sky", () => "Catalogs" as const),
                 Match.when("Filter out candidates close to stars ", () => "Fltr Near Stars" as const),
-                Match.when("Filter out blurry imgs", () => "Flr Blurry Imgs" as const),
                 Match.when("Calculate zeropoint of image", () => "Zero Point" as const),
                 Match.when("Calculate real-bogus score for candidates", () => "Real-Bogus" as const),
                 Match.when("Making cutouts ", () => "Cutouts" as const),
-                Match.when("make_lightcurve", () => "Lightcurve" as const),
                 Match.when("save the image", () => "Save" as const),
                 Match.when("skyportal_logging", () => "Skyportal" as const),
                 Match.when("Create bad pixel mask from raw image", () => "Bad Pix Map" as const),
+                Match.when("Finding the five sigma upper limit of magnitude", () => "Five Sigma" as const),
+                Match.when("Post annotations from MPC query", () => "MPC Query" as const),
                 Match.exhaustive
             ),
     }
