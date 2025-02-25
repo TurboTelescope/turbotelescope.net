@@ -90,7 +90,7 @@ export function AverageProcessingTimeLineChart() {
     };
     const chartData: MappedData = Record.values(
         Record.map(
-            timeSeriesData.value,
+            timeSeriesData,
             ({ avgFailTime, avgSuccessTime, numberFailedRuns, numberSuccessfulRuns, threshold }, key) => ({
                 date: key,
                 [chart1]: threshold,
