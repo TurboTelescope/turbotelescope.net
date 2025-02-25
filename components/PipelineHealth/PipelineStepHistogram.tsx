@@ -44,6 +44,7 @@ export function PipelineStepHistogram() {
             return group;
         })
     );
+
     const sorted = bucketsWithFailures.sort(
         (a, b) => PipelineStepName.literals.indexOf(a.pipelineStep) - PipelineStepName.literals.indexOf(b.pipelineStep)
     );
@@ -72,9 +73,9 @@ export function PipelineStepHistogram() {
                             tickLine={true}
                             axisLine={false}
                             tickMargin={8}
-                            tickFormatter={(longname: typeof PipelineStepName.Type) => {
-                                return Schema.decodeSync(ShortPipelineName)(longname);
-                            }}
+                            tickFormatter={(longName: typeof PipelineStepName.Type) =>
+                                Schema.decodeSync(ShortPipelineName)(longName)
+                            }
                         />
                         <YAxis tickLine={true} axisLine={false} tickMargin={8} tickFormatter={(value) => `${value}`} />
                         <ChartTooltip content={<ChartTooltipContent className="w-[275px]" />} />
