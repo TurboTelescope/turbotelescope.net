@@ -1,6 +1,7 @@
 "use client";
 
 import { useRx } from "@effect-rx/rx-react";
+import { HashSet, Schema } from "effect";
 
 import { steps2queryRx } from "@/components/PipelineHealth/rx";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ShortPipelineName } from "@/services/Domain";
+import { PipelineStepName, ShortPipelineName } from "@/services/Domain";
 
 export function Steps2querySelector() {
     const [steps2query, setSteps2query] = useRx(steps2queryRx);
@@ -27,7 +28,7 @@ export function Steps2querySelector() {
                 <DropdownMenuItem
                     onSelect={(event) => {
                         event.preventDefault();
-                        setSteps2query(new Set(ShortPipelineName.to.literals));
+                        setSteps2query(HashSet.fromIterable(PipelineStepName.literals));
                     }}
                 >
                     Select All
@@ -35,22 +36,23 @@ export function Steps2querySelector() {
                 <DropdownMenuItem
                     onSelect={(event) => {
                         event.preventDefault();
-                        setSteps2query(new Set());
+                        setSteps2query(HashSet.empty());
                     }}
                 >
                     Unselect All
                 </DropdownMenuItem>
                 {ShortPipelineName.to.literals.map((shortName, i) => {
+                    const longName = Schema.encodeSync(ShortPipelineName)(shortName);
                     return (
                         <DropdownMenuCheckboxItem
                             key={i}
-                            checked={steps2query.has(shortName)}
+                            checked={HashSet.has(steps2query, shortName)}
                             onSelect={(event) => event.preventDefault()}
                             onCheckedChange={(checked) => {
                                 if (checked == true) {
-                                    setSteps2query(steps2query.union(new Set([shortName])));
+                                    setSteps2query(HashSet.add(steps2query, longName));
                                 } else {
-                                    setSteps2query(steps2query.difference(new Set([shortName])));
+                                    setSteps2query(HashSet.remove(steps2query, longName));
                                 }
                             }}
                         >

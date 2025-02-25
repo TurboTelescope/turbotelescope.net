@@ -10,7 +10,7 @@ import {
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { splitLiteral } from "@/services/Domain";
 import { useRxSuspenseSuccess, useRxValue } from "@effect-rx/rx-react";
-import { DateTime } from "effect";
+import { DateTime, HashSet } from "effect";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 
@@ -70,7 +70,7 @@ export const getRefURL = (
 export function RunsTable() {
     const tableData = useRxSuspenseSuccess(tableDataRx).value;
     const steps2query = useRxValue(steps2queryRx);
-    const filterTableData = tableData.filter((value) => steps2query.has(value.status));
+    const filterTableData = tableData.filter(({ pipelineStepName }) => HashSet.has(steps2query, pipelineStepName));
 
     return (
         <Table>
@@ -89,7 +89,7 @@ export function RunsTable() {
                 {filterTableData.map((row, index) => (
                     <TableRow key={index}>
                         <TableCell className="font-medium">{DateTime.formatIso(row.run)}</TableCell>
-                        <TableCell>{row.status}</TableCell>
+                        <TableCell>{row.shortPipelineStepName}</TableCell>
                         <TableCell>{row.processingTime}</TableCell>
                         <TableCell>{row.file}</TableCell>
                         <TableCell>

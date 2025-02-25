@@ -22,11 +22,15 @@ export function PipelineHealth() {
     const pullTimeSeriesData = useRxSet(timeSeriesGroupedRx);
     useMemo(pullTimeSeriesData, [pullTimeSeriesData]);
 
-    const updateFrom = useRxSet(fromRx);
-    useMemo(() => updateFrom(new Date("2024-11-19")), [updateFrom]);
+    // const updateFrom = useRxSet(fromRx);
+    // useMemo(() => updateFrom(new Date("2024-11-19")), [updateFrom]);
 
-    const updateUntil = useRxSet(untilRx);
-    useMemo(() => updateUntil(new Date()), [updateUntil]);
+    // const updateUntil = useRxSet(untilRx);
+    // useMemo(() => {
+    //     const d = new Date();
+    //     console.log("d", d);
+    //     updateUntil(d);
+    // }, [updateUntil]);
 
     // Gets
     const from = useRxValue(fromRx);

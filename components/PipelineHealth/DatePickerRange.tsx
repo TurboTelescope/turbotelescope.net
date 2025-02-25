@@ -1,69 +1,33 @@
 "use client";
 
 import { Result, useRx, useRxValue } from "@effect-rx/rx-react";
-import { format } from "date-fns";
 import { DateTime } from "effect";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { HTMLAttributes, useState } from "react";
-import { DateRange } from "react-day-picker";
+import { HTMLAttributes, useMemo } from "react";
 
 import { fromRx, localeRx, untilRx } from "@/components/PipelineHealth/rx";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 export function DatePickerWithRange({ className }: HTMLAttributes<HTMLDivElement>) {
     const [from, updateFrom] = useRx(fromRx);
     const [until, updateUntil] = useRx(untilRx);
-    const _locale = useRxValue(localeRx).pipe(Result.getOrThrow);
+    const locale = useRxValue(localeRx).pipe(Result.getOrThrow);
 
-    const [date, setDate] = useState<DateRange | undefined>({
-        from: DateTime.toDate(Result.getOrThrow(from)),
-        to: DateTime.toDate(Result.getOrThrow(until)),
-    });
+    const dates = useMemo(
+        () => ({
+            from: DateTime.toDate(Result.getOrThrow(from)),
+            until: DateTime.toDate(Result.getOrThrow(until)),
+        }),
+        [from, until]
+    );
+
+    const timezone = useMemo(() => DateTime.zoneToString(locale), [locale]);
+    console.log(timezone);
+    console.log(dates);
 
     return (
         <div className={cn("grid gap-2", className)}>
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button
-                        id="date"
-                        variant={"outline"}
-                        className={cn(
-                            "w-[300px] justify-start text-left font-normal",
-                            !date && "text-muted-foreground"
-                        )}
-                    >
-                        <CalendarIcon />
-                        {date?.from ? (
-                            date.to ? (
-                                <>
-                                    {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
-                                </>
-                            ) : (
-                                format(date.from, "LLL dd, y")
-                            )
-                        ) : (
-                            <span>Pick a date</span>
-                        )}
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                    {/* <Calendar
-                        initialFocus
-                        mode="range"
-                        defaultMonth={date?.from}
-                        selected={date}
-                        onSelect={(dates) => {
-                            setDate(dates);
-                            if (Predicate.isNotUndefined(dates?.from)) updateFrom(dates.from);
-                            if (Predicate.isNotUndefined(dates?.to)) updateUntil(dates.to);
-                        }}
-                        numberOfMonths={2}
-                        // timeZone="America/Chicago"
-                    /> */}
-                </PopoverContent>
-            </Popover>
+            {/* <DateTimePicker clearable={true} onChange={(x) => {}} value={dates.from} timeZone={timezone} />
+            <DateTimePicker clearable={true} onChange={(x) => {}} value={dates.until} timeZone={timezone} /> */}
         </div>
     );
 }

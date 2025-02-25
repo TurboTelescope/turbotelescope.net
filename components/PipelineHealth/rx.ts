@@ -10,6 +10,7 @@ import {
     Duration,
     Effect,
     Function,
+    HashSet,
     Layer,
     Logger,
     LogLevel,
@@ -23,23 +24,25 @@ import {
 } from "effect";
 
 import { rpcClient } from "@/app/api/client";
-import { ResultRow, RunsInTimeRangeRequest, SchemaName, ShortPipelineName } from "@/services/Domain";
+import { PipelineStepName, ResultRow, RunsInTimeRangeRequest, SchemaName, ShortPipelineName } from "@/services/Domain";
 
 // Rx runtime
 const runtime = Rx.runtime(Layer.provideMerge(FetchHttpClient.layer, Logger.minimumLogLevel(LogLevel.All)));
+
+// Get the current time in utc
+const utcNowSync = Function.pipe(DateTime.now, Effect.runSync);
 
 // ------------------------------------------------------------
 //            Rx Atoms for pipeline health page
 // ------------------------------------------------------------
 
-// Locale tracks the current timezone/locale that the user has selected, which is an IANA time zone identifier
+// localeRx tracks the current timezone/locale that the user has selected, which is an IANA time zone identifier
 export const localeRx = Rx.fn<string, never, DateTime.TimeZone>(
     (locale: string, _ctx: Rx.Context): Effect.Effect<DateTime.TimeZone, never, never> =>
         Function.pipe(
             DateTime.zoneMakeNamed(locale),
-            Effect.catchAll(() => new Cause.IllegalArgumentException("Invalid timezone")),
-            Effect.tap(Effect.logDebug),
-            Effect.orDie
+            Option.getOrThrowWith(() => new Cause.IllegalArgumentException("Invalid timezone")),
+            Effect.succeed
         ),
     {
         initialValue: DateTime.zoneMakeLocal(),
@@ -47,56 +50,10 @@ export const localeRx = Rx.fn<string, never, DateTime.TimeZone>(
 );
 
 // fromRx tracks the start of the time range that the user has selected
-export const fromRx = Rx.fn<Date, never, DateTime.Zoned>(
-    (date: Date, ctx: Rx.Context): Effect.Effect<DateTime.Zoned, never, never> =>
-        Effect.Do.pipe(
-            Effect.bind("locale", () => ctx.result(localeRx)),
-            Effect.bind("date", () => Effect.succeed(date)),
-            Effect.flatMap(({ date, locale }) =>
-                DateTime.makeZoned(date, {
-                    timeZone: locale,
-                    adjustForTimeZone: false,
-                })
-            ),
-            Effect.catchAll(() => new Cause.IllegalArgumentException("Invalid date")),
-            Effect.tap(Effect.logDebug),
-            Effect.orDie
-        ),
-    {
-        initialValue: Function.pipe(
-            DateTime.nowInCurrentZone,
-            DateTime.withCurrentZoneLocal,
-            Effect.map(DateTime.subtractDuration(Duration.hours(24))),
-            Effect.runSync
-        ),
-    }
-);
+export const fromRx = Rx.make<DateTime.Utc>(Function.pipe(utcNowSync, DateTime.subtractDuration(Duration.hours(24))));
 
 // untilRx tracks the end of the time range that the user has selected
-export const untilRx = Rx.fn<Date, never, DateTime.Zoned>(
-    (date: Date, ctx: Rx.Context): Effect.Effect<DateTime.Zoned, never, never> =>
-        Effect.Do.pipe(
-            Effect.bind("locale", () => ctx.result(localeRx)),
-            Effect.let("date", () => date),
-            Effect.flatMap(({ date, locale }) =>
-                DateTime.makeZoned(date, {
-                    timeZone: locale,
-                    adjustForTimeZone: false,
-                })
-            ),
-            Effect.catchAll(() => new Cause.IllegalArgumentException("Invalid date")),
-            Effect.tap(Effect.logDebug),
-            Effect.orDie
-        ),
-    {
-        initialValue: Function.pipe(
-            DateTime.nowInCurrentZone,
-            DateTime.withCurrentZoneLocal,
-            Effect.map(DateTime.subtractDuration(Duration.millis(0))),
-            Effect.runSync
-        ),
-    }
-);
+export const untilRx = Rx.make<DateTime.Utc>(Function.pipe(utcNowSync));
 
 // includeEmptyBucketsRx tracks whether or not to include empty buckets in the time series data
 export const includeEmptyBucketsRx = Rx.make<true | false>(false);
@@ -111,7 +68,9 @@ export const activeDataRx = Rx.make<"success" | "failure" | "All">("All" as cons
 export const aggregateByRx = Rx.make<Exclude<DateTime.DateTime.UnitPlural, "millis">>("days");
 
 // creating list of Pipeline to select from when querying
-export const steps2queryRx = Rx.make<Set<typeof ShortPipelineName.to.Type>>(new Set(ShortPipelineName.to.literals));
+export const steps2queryRx = Rx.make<HashSet.HashSet<typeof PipelineStepName.Type>>(
+    HashSet.fromIterable(PipelineStepName.literals)
+);
 
 // ------------------------------------------------------------
 //            Composed Rx's for pipeline health page
@@ -121,27 +80,14 @@ export const steps2queryRx = Rx.make<Set<typeof ShortPipelineName.to.Type>>(new 
 export const rowsRx: Rx.RxResultFn<void, Array<ResultRow>, never> = runtime.fn(
     (_: void, ctx: Rx.Context): Effect.Effect<Array<ResultRow>, never, HttpClient.HttpClient> =>
         Effect.Do.pipe(
-            Effect.bind("from", () => ctx.result(fromRx)),
-            Effect.bind("until", () => ctx.result(untilRx)),
-            Effect.let("zoned2Utc", () => Function.compose(DateTime.toEpochMillis, DateTime.unsafeMake)),
-            Effect.bind("request", ({ from, until, zoned2Utc }) =>
-                Effect.succeed(new RunsInTimeRangeRequest({ from: zoned2Utc(from), until: zoned2Utc(until) }))
-            ),
+            Effect.let("from", () => ctx.get(fromRx)),
+            Effect.let("until", () => ctx.get(untilRx)),
+            Effect.let("request", ({ from, until }) => new RunsInTimeRangeRequest({ from, until })),
             Effect.bind("client", () => rpcClient),
             Effect.flatMap(({ client, request }) => client(request)),
             Effect.map(Record.values),
             Effect.map(Array.flatten),
-            Effect.map((x) => {
-                const steps2query = ctx.get(steps2queryRx);
-                const a = Array.filterMap(x, (data) => {
-                    const shortname = Schema.decodeOption(ShortPipelineName)(data.pipelineStep);
-                    if (Option.isSome(shortname)) {
-                        if (steps2query.has(shortname.value)) return Option.some(data);
-                    }
-                    return Option.none();
-                });
-                return a;
-            })
+            Effect.map(Array.filter(({ pipelineStep }) => HashSet.has(ctx.get(steps2queryRx), pipelineStep)))
         )
 );
 
@@ -202,8 +148,8 @@ export const timeSeriesGroupedRx: Rx.RxResultFn<
         never
     > =>
         Effect.gen(function* () {
-            const from = yield* ctx.result(fromRx);
-            const until = yield* ctx.result(untilRx);
+            const from = ctx.get(fromRx);
+            const until = ctx.get(untilRx);
             const rows = yield* ctx.result(rowsRx);
             const unit = ctx.get(aggregateByRx);
             const includeEmptyBuckets = ctx.get(includeEmptyBucketsRx);
@@ -288,11 +234,12 @@ export const tableDataRx: Rx.Rx<
             file:
                 | `${string}telescope_g_${string}_${string}_${number}_${string}.fits`
                 | `${string}telescope_r_${string}_${string}_${number}_${string}.fits`;
-            status: typeof ShortPipelineName.to.Type;
             message: string;
             run: DateTime.Utc;
             processingTime: number;
             schemaName: typeof SchemaName.Encoded;
+            pipelineStepName: typeof PipelineStepName.Type;
+            shortPipelineStepName: typeof ShortPipelineName.to.Type;
         }>,
         never
     >
@@ -304,11 +251,12 @@ export const tableDataRx: Rx.Rx<
             file:
                 | `${string}telescope_g_${string}_${string}_${number}_${string}.fits`
                 | `${string}telescope_r_${string}_${string}_${number}_${string}.fits`;
-            status: typeof ShortPipelineName.to.Type;
             message: string;
             run: DateTime.Utc;
             processingTime: number;
             schemaName: typeof SchemaName.Encoded;
+            pipelineStepName: typeof PipelineStepName.Type;
+            shortPipelineStepName: typeof ShortPipelineName.to.Type;
         }>,
         never,
         never
@@ -317,25 +265,29 @@ export const tableDataRx: Rx.Rx<
             const activeLabel = ctx.get(activeLabelRx);
             const timeSeriesData = yield* ctx.result(timeSeriesGroupedRx);
 
-            const selectedRows: Array<ResultRow> = Function.pipe(
+            const selectedRows = Function.pipe(
                 timeSeriesData,
                 Record.get(activeLabel ?? ""),
                 Option.getOrElse(() => ({ entries: Array.empty<ResultRow>() })),
                 ({ entries }) => entries
             );
-            const a = Array.map(selectedRows, (row) =>
-                Effect.gen(function* () {
-                    const shortPipelineStep = yield* Schema.decode(ShortPipelineName)(row.pipelineStep);
-                    return {
+
+            const withShortNames = yield* Function.pipe(
+                Array.map(selectedRows, (row) =>
+                    Effect.map(Schema.decode(ShortPipelineName)(row.pipelineStep), (shortPipelineStepName) => ({
                         run: row.date,
                         file: row.filePath,
                         message: row.completion,
-                        status: shortPipelineStep,
                         schemaName: row.sourceTable,
                         processingTime: row.processingTime,
-                    };
-                })
+                        pipelineStepName: row.pipelineStep,
+                        shortPipelineStepName,
+                    }))
+                ),
+                Effect.allWith(),
+                Effect.orDie
             );
-            return yield* Effect.all(a).pipe(Effect.orDie);
+
+            return withShortNames;
         })
 );
