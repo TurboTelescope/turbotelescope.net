@@ -1,3 +1,11 @@
+/**
+ * The steps filter determines which steps are shown on the step bar chart. It
+ * is a dropdown menu that allows the user to select, from the list of short
+ * pipeline step names, which steps to query. The filtering is applied client
+ * side, so the user can see the results of their selection immediately without
+ * needing to requery from the database.
+ */
+
 "use client";
 
 import { useRx } from "@effect-rx/rx-react";
