@@ -11,7 +11,8 @@ import { Effect, Function, Stream, String } from "effect";
 
 import { SchemaName, splitLiteral, tail } from "@/services/Domain";
 
-const popcornServer = "/mnt/14tb_turbo_disk/users/mssgill/pipeline/logging_folder/";
+//const popcornServerOld = "/mnt/14tb_turbo_disk/users/mssgill/pipeline/logging_folder/";
+const popcornServer = "/mnt/14tb_turbo_disk/turbo/pipeline/logging_folder/";
 const tlenaiiServer = "/home/tlenaii/pipeline_work/pipeline/logging_folder/";
 
 const make = Effect.gen(function* () {
