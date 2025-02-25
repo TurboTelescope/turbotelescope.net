@@ -1,5 +1,10 @@
 "use client";
 
+import { useRxSuspenseSuccess, useRxValue } from "@effect-rx/rx-react";
+import { DateTime, HashSet } from "effect";
+import { ChevronDown } from "lucide-react";
+import Link from "next/link";
+
 import { steps2queryRx, tableDataRx } from "@/components/PipelineHealth/rx";
 import {
     DropdownMenu,
@@ -9,10 +14,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { splitLiteral } from "@/services/Domain";
-import { useRxSuspenseSuccess, useRxValue } from "@effect-rx/rx-react";
-import { DateTime, HashSet } from "effect";
-import { ChevronDown } from "lucide-react";
-import Link from "next/link";
 
 export const getSciURL = (filePath: string): string => {
     const start = filePath.indexOf("telescope_");
