@@ -5,7 +5,10 @@
  * the user to select the aggregation interval.
  *
  * Aggregation by seconds and minutes is disabled when include empty buckets is
- * enabled because otherwise the graph would be too dense / render poorly.
+ * enabled because otherwise the graph would be too dense / render poorly. The
+ * database service only returns the raw data from the database and we apply
+ * this transformation and empty buckets on the client so that we don't have to
+ * refetch data when the user changes this selection.
  *
  * TODO: I think aggregation by seconds and minutes does make sense so long as
  * the time range is small enough. A quantifiable metric might be the number of
