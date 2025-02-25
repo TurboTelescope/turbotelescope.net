@@ -46,7 +46,7 @@ export function Steps2querySelector() {
                     return (
                         <DropdownMenuCheckboxItem
                             key={i}
-                            checked={HashSet.has(steps2query, shortName)}
+                            checked={HashSet.has(steps2query, longName)}
                             onSelect={(event) => event.preventDefault()}
                             onCheckedChange={(checked) => {
                                 if (checked == true) {
