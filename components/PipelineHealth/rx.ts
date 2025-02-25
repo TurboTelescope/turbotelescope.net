@@ -29,9 +29,6 @@ import { PipelineStepName, ResultRow, RunsInTimeRangeRequest, SchemaName, ShortP
 // Rx runtime
 const runtime = Rx.runtime(Layer.provideMerge(FetchHttpClient.layer, Logger.minimumLogLevel(LogLevel.All)));
 
-// Get the current time in utc
-const utcNowSync = Function.pipe(DateTime.now, Effect.runSync);
-
 // ------------------------------------------------------------
 //            Rx Atoms for pipeline health page
 // ------------------------------------------------------------
@@ -50,10 +47,16 @@ export const localeRx = Rx.fn<string, never, DateTime.TimeZone>(
 );
 
 // fromRx tracks the start of the time range that the user has selected
-export const fromRx = Rx.make<DateTime.Utc>(Function.pipe(utcNowSync, DateTime.subtractDuration(Duration.hours(24))));
+export const fromRx = Rx.fn<DateTime.DateTime, never, DateTime.Zoned>(
+    (datetime: DateTime.DateTime, ctx: Rx.Context): Effect.Effect<DateTime.Zoned, never, never> =>
+        Effect.map(ctx.result(localeRx), (locale) => DateTime.setZone(datetime, locale))
+);
 
 // untilRx tracks the end of the time range that the user has selected
-export const untilRx = Rx.make<DateTime.Utc>(Function.pipe(utcNowSync));
+export const untilRx = Rx.fn<DateTime.DateTime, never, DateTime.Zoned>(
+    (datetime: DateTime.DateTime, ctx: Rx.Context): Effect.Effect<DateTime.Zoned, never, never> =>
+        Effect.map(ctx.result(localeRx), (locale) => DateTime.setZone(datetime, locale))
+);
 
 // includeEmptyBucketsRx tracks whether or not to include empty buckets in the time series data
 export const includeEmptyBucketsRx = Rx.make<true | false>(false);
@@ -80,8 +83,8 @@ export const steps2queryRx = Rx.make<HashSet.HashSet<typeof PipelineStepName.Typ
 export const rowsRx: Rx.RxResultFn<void, Array<ResultRow>, never> = runtime.fn(
     (_: void, ctx: Rx.Context): Effect.Effect<Array<ResultRow>, never, HttpClient.HttpClient> =>
         Effect.Do.pipe(
-            Effect.let("from", () => ctx.get(fromRx)),
-            Effect.let("until", () => ctx.get(untilRx)),
+            Effect.bind("from", () => ctx.result(fromRx).pipe(Effect.map(DateTime.toUtc))),
+            Effect.bind("until", () => ctx.result(untilRx).pipe(Effect.map(DateTime.toUtc))),
             Effect.let("request", ({ from, until }) => new RunsInTimeRangeRequest({ from, until })),
             Effect.bind("client", () => rpcClient),
             Effect.flatMap(({ client, request }) => client(request)),
@@ -148,8 +151,8 @@ export const timeSeriesGroupedRx: Rx.RxResultFn<
         never
     > =>
         Effect.gen(function* () {
-            const from = ctx.get(fromRx);
-            const until = ctx.get(untilRx);
+            const from = yield* ctx.result(fromRx);
+            const until = yield* ctx.result(untilRx);
             const rows = yield* ctx.result(rowsRx);
             const unit = ctx.get(aggregateByRx);
             const includeEmptyBuckets = ctx.get(includeEmptyBucketsRx);

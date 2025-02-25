@@ -1,7 +1,7 @@
 "use client";
 
 import { Result, useRx, useRxSet, useRxValue } from "@effect-rx/rx-react";
-import { DateTime } from "effect";
+import { DateTime, Duration, Effect } from "effect";
 import { Suspense, useMemo } from "react";
 
 import { AggregateBySelector } from "@/components/PipelineHealth/AggregateBySelector";
@@ -22,21 +22,21 @@ export function PipelineHealth() {
     const pullTimeSeriesData = useRxSet(timeSeriesGroupedRx);
     useMemo(pullTimeSeriesData, [pullTimeSeriesData]);
 
-    // const updateFrom = useRxSet(fromRx);
-    // useMemo(() => updateFrom(new Date("2024-11-19")), [updateFrom]);
+    const updateFrom = useRxSet(fromRx);
+    useMemo(
+        () => updateFrom(Effect.runSync(DateTime.now).pipe(DateTime.subtractDuration(Duration.days(3)))),
+        [updateFrom]
+    );
 
-    // const updateUntil = useRxSet(untilRx);
-    // useMemo(() => {
-    //     const d = new Date();
-    //     console.log("d", d);
-    //     updateUntil(d);
-    // }, [updateUntil]);
+    const updateUntil = useRxSet(untilRx);
+    useMemo(() => updateUntil(Effect.runSync(DateTime.now)), [updateUntil]);
 
     // Gets
     const from = useRxValue(fromRx);
     const until = useRxValue(untilRx);
     const totals = useRxValue(totalsRx);
 
+    // TODO: Error handling
     if (!Result.isSuccess(from) || !Result.isSuccess(until) || !Result.isSuccess(totals)) {
         return <p>Loading...</p>;
     }

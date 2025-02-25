@@ -5,6 +5,7 @@
  * code at https://github.com/huybuidac/shadcn-datetime-picker
  */
 
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
