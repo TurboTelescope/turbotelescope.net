@@ -170,11 +170,8 @@ export const steps2queryRx = Rx.make<HashSet.HashSet<typeof PipelineStepName.Typ
 // ------------------------------------------------------------
 
 /** Fetches all the rows from the database in the time range. */
-export const rowsRx: Rx.RxResultFn<void, Array<ResultRow>, Cause.IllegalArgumentException> = runtime.fn(
-    (
-        _: void,
-        ctx: Rx.Context
-    ): Effect.Effect<Array<ResultRow>, Cause.IllegalArgumentException, HttpClient.HttpClient> =>
+export const rowsRx: Rx.Rx<Result.Result<Array<ResultRow>, Cause.IllegalArgumentException>> = runtime.rx(
+    (ctx: Rx.Context): Effect.Effect<Array<ResultRow>, Cause.IllegalArgumentException, HttpClient.HttpClient> =>
         Effect.Do.pipe(
             Effect.bind("from", () => ctx.result(fromRx).pipe(Effect.map(DateTime.toUtc))),
             Effect.bind("until", () => ctx.result(untilRx).pipe(Effect.map(DateTime.toUtc))),
@@ -216,23 +213,23 @@ export const totalsRx: Rx.Rx<
 );
 
 /** Computes the average processing time for successful and failed runs. */
-export const timeSeriesGroupedRx: Rx.RxResultFn<
-    void,
-    Record<
-        string,
-        {
-            threshold: number;
-            avgFailTime: number;
-            avgSuccessTime: number;
-            entries: Array<ResultRow>;
-            numberFailedRuns: number;
-            numberSuccessfulRuns: number;
-        }
-    >,
-    Cause.IllegalArgumentException
-> = runtime.fn(
+export const timeSeriesGroupedRx: Rx.Rx<
+    Result.Result<
+        Record<
+            string,
+            {
+                threshold: number;
+                avgFailTime: number;
+                avgSuccessTime: number;
+                entries: Array<ResultRow>;
+                numberFailedRuns: number;
+                numberSuccessfulRuns: number;
+            }
+        >,
+        Cause.IllegalArgumentException
+    >
+> = runtime.rx(
     (
-        _: void,
         ctx: Rx.Context
     ): Effect.Effect<
         Record<
