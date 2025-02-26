@@ -1,36 +1,25 @@
 "use client";
 
-import { Result, useRx, useRxSet, useRxValue } from "@effect-rx/rx-react";
+import { useRxSuspenseSuccess } from "@effect-rx/rx-react";
 import { DateTime } from "effect";
-import { Suspense, useMemo } from "react";
+import { Suspense } from "react";
 
 import { AggregateBySelector } from "@/components/PipelineHealth/AggregateBySelector";
 import { DatePickerWithRange } from "@/components/PipelineHealth/DatePickerRange";
 import { EmptyBucketsToggle } from "@/components/PipelineHealth/EmptyBucketsToggle";
+import { LocaleSelector } from "@/components/PipelineHealth/LocaleSelector";
 import { PipelineStepHistogram } from "@/components/PipelineHealth/PipelineStepHistogram";
 import { AverageProcessingTimeLineChart } from "@/components/PipelineHealth/RunTimeHist";
+import { Steps2querySelector } from "@/components/PipelineHealth/StepsFilter";
 import { RunsTable } from "@/components/PipelineHealth/Table";
-import { fromRx, rowsRx, timeSeriesGroupedRx, totalsRx, untilRx } from "@/components/PipelineHealth/rx";
-import { LocaleSelector } from "./PipelineHealth/LocaleSelector";
-import { Steps2querySelector } from "./PipelineHealth/StepsFilter";
+import { fromRx, totalsRx, untilRx } from "@/components/PipelineHealth/rx";
 
 export function PipelineHealth() {
-    // Sets
-    const [_rows, pullRows] = useRx(rowsRx);
-    useMemo(pullRows, [pullRows]);
+    const from = useRxSuspenseSuccess(fromRx).value;
+    const until = useRxSuspenseSuccess(untilRx).value;
 
-    const pullTimeSeriesData = useRxSet(timeSeriesGroupedRx);
-    useMemo(pullTimeSeriesData, [pullTimeSeriesData]);
-
-    // Gets
-    const from = useRxValue(fromRx);
-    const until = useRxValue(untilRx);
-    const totals = useRxValue(totalsRx);
-
-    // TODO: Error handling
-    if (!Result.isSuccess(from) || !Result.isSuccess(until) || !Result.isSuccess(totals)) {
-        return <p>Loading...</p>;
-    }
+    const totals = useRxSuspenseSuccess(totalsRx).value;
+    console.log(totals);
 
     return (
         <>
@@ -52,8 +41,8 @@ export function PipelineHealth() {
                 </div>
             </div>
             <span className="flex justify-center my-4 text-sm text-muted-foreground">
-                Selected {totals.value.totalRuns} images between {DateTime.formatIsoZoned(from.value)} and{" "}
-                {DateTime.formatIsoZoned(until.value)}
+                Selected {totals.totalRuns} images between {DateTime.formatIsoZoned(from)} and{" "}
+                {DateTime.formatIsoZoned(until)}
             </span>
 
             <Suspense fallback={<p>Loading...</p>}>
