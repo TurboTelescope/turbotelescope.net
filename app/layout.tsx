@@ -21,7 +21,7 @@ const calSans = localFont({
 
 export default function RootLayout({ children }: { children: ReactNode }) {
     return (
-        <html lang="en" className={`relative ${inter.variable} ${calSans.variable}`}>
+        <html lang="en" className={`relative ${inter.variable} ${calSans.variable}`} suppressHydrationWarning>
             <body className="relative overflow-x-hidden antialiased font-light bg-white dark:bg-[#09090B] text-zinc-700 dark:text-zinc-300">
                 <Providers>{children}</Providers>
             </body>

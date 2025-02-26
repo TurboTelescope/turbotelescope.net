@@ -1,10 +1,11 @@
 "use client";
 
-import { useState /*useEffect*/ } from "react";
-import Link from "next/link";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { AlignJustifyIcon, Telescope } from "lucide-react";
 import { useTheme } from "next-themes";
+import Link from "next/link";
+import { useState } from "react";
+
+import { ModeToggle } from "@/components/ThemeToggle";
 
 const Header: React.FC = () => {
     // State to track dropdown visibility
@@ -14,9 +15,6 @@ const Header: React.FC = () => {
     const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
     const { theme } = useTheme();
-    //const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    // const headerColor =
-    //     theme == "dark" ? "#151515" : theme == "light" ? "#f2f2f2" : systemTheme == "dark" ? "#151515" : "#f2f2f2";
 
     return (
         <div
@@ -29,7 +27,7 @@ const Header: React.FC = () => {
             }}
         >
             <h1>
-                <ThemeToggle />
+                <ModeToggle />
             </h1>
 
             {/* Dropdown button */}
