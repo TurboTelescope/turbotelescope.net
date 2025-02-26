@@ -17,9 +17,7 @@ import { fromRx, totalsRx, untilRx } from "@/components/PipelineHealth/rx";
 export function PipelineHealth() {
     const from = useRxSuspenseSuccess(fromRx).value;
     const until = useRxSuspenseSuccess(untilRx).value;
-
     const totals = useRxSuspenseSuccess(totalsRx).value;
-    console.log(totals);
 
     return (
         <>
