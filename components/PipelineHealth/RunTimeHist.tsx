@@ -9,7 +9,6 @@ import {
     activeDataRx,
     activeLabelRx,
     aggregateByRx,
-    localeRx,
     timeSeriesGroupedRx,
     totalsRx,
 } from "@/components/PipelineHealth/rx";
@@ -72,7 +71,6 @@ export type MappedData = Array<{
 export function AverageProcessingTimeLineChart() {
     // Gets
     const aggregateBy = useRxValue(aggregateByRx);
-    const _locale = useRxSuspenseSuccess(localeRx).value;
 
     // Sets
     const setActiveLabel = useRxSet(activeLabelRx);
