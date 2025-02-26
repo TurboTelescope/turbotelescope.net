@@ -105,7 +105,7 @@ export const fromRx = Rx.fn<Date | DateTime.DateTime | undefined, Cause.IllegalA
  * any timezone and the local timezone and just attach the users selected
  * timezone instead.
  */
-export const untilRx = Rx.fn<Date | DateTime.DateTime, Cause.IllegalArgumentException, DateTime.Zoned>(
+export const untilRx = Rx.fn<Date | DateTime.DateTime | undefined, Cause.IllegalArgumentException, DateTime.Zoned>(
     (
         input: Date | DateTime.DateTime | undefined,
         ctx: Rx.Context
