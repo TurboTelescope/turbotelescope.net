@@ -1,13 +1,13 @@
 "use client";
 
+import { useRxSuspenseSuccess } from "@effect-rx/rx-react";
 import { Array, Function, Option, Record, Schema, Tuple } from "effect";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
+import { rowsRx } from "@/components/PipelineHealth/rx";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { PipelineStepName, ShortPipelineName } from "@/services/Domain";
-import { useRxSuspenseSuccess } from "@effect-rx/rx-react";
-import { rowsRx } from "./rx";
 
 const chart1 = "percentPipelineFailure" as const;
 
@@ -44,6 +44,7 @@ export function PipelineStepHistogram() {
             return group;
         })
     );
+
     const sorted = bucketsWithFailures.sort(
         (a, b) => PipelineStepName.literals.indexOf(a.pipelineStep) - PipelineStepName.literals.indexOf(b.pipelineStep)
     );
@@ -72,9 +73,9 @@ export function PipelineStepHistogram() {
                             tickLine={true}
                             axisLine={false}
                             tickMargin={8}
-                            tickFormatter={(longname: typeof PipelineStepName.Type) => {
-                                return Schema.decodeSync(ShortPipelineName)(longname);
-                            }}
+                            tickFormatter={(longName: typeof PipelineStepName.Type) =>
+                                Schema.decodeSync(ShortPipelineName)(longName)
+                            }
                         />
                         <YAxis tickLine={true} axisLine={false} tickMargin={8} tickFormatter={(value) => `${value}`} />
                         <ChartTooltip content={<ChartTooltipContent className="w-[275px]" />} />

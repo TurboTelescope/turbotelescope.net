@@ -3,10 +3,10 @@
 import { Result, Rx, useRxSet, useRxSuspenseSuccess } from "@effect-rx/rx-react";
 import { FetchHttpClient, HttpClient } from "@effect/platform";
 import { Effect, Stream } from "effect";
+import { useMemo } from "react";
 
 import { rpcClient } from "@/app/api/client";
 import { SchemaName, VerboseLogRequest, VerboseLogURLRequest } from "@/services/Domain";
-import { useMemo } from "react";
 
 const runtime = Rx.runtime(FetchHttpClient.layer);
 

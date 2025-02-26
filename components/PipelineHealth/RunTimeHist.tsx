@@ -43,7 +43,7 @@ export const chartConfigs = {
     },
     [chart5]: {
         color: "#FF0000",
-        title: "Number of Failed of Runs",
+        title: "Number of Failed Runs",
         label: "Number of Failed Runs",
         icon: Cross2Icon,
     },
@@ -101,7 +101,8 @@ export function AverageProcessingTimeLineChart() {
             })
         )
     );
-    const activeChartKey = activeChart === "All" ? chart6 : activeChart === "success" ? chart2 : chart3;
+    const activeChartKey = activeChart === "all" ? chart6 : activeChart === "success" ? chart2 : chart3;
+
     // Chart implementation
     return (
         <Card>
@@ -121,7 +122,7 @@ export function AverageProcessingTimeLineChart() {
                                 className="flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
                                 onClick={() =>
                                     chart === "averageProcessingTimeAllRuns"
-                                        ? setActiveChart("All")
+                                        ? setActiveChart("all")
                                         : chart === "averageSuccessProcessingTime"
                                           ? setActiveChart("success")
                                           : setActiveChart("failure")
@@ -201,7 +202,7 @@ export function AverageProcessingTimeLineChart() {
                             height={36}
                         />
 
-                        {activeChart === "All" ? (
+                        {activeChart === "all" ? (
                             <Bar
                                 key={`${chart6}.${chart2}-bar`}
                                 dataKey={`${chart2}`}
@@ -212,7 +213,7 @@ export function AverageProcessingTimeLineChart() {
                         ) : (
                             <></>
                         )}
-                        {activeChart === "All" ? (
+                        {activeChart === "all" ? (
                             <Bar
                                 key={`${chart6}.${chart3}-bar`}
                                 dataKey={`${chart3}`}
@@ -224,7 +225,7 @@ export function AverageProcessingTimeLineChart() {
                             <></>
                         )}
 
-                        {activeChart !== "All" ? (
+                        {activeChart !== "all" ? (
                             <Bar
                                 key={activeChart === "success" ? `${chart2}-bar` : `${chart3}-bar`}
                                 dataKey={activeChart === "success" ? chart2 : chart3}
