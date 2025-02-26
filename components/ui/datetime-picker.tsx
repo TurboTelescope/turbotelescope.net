@@ -217,7 +217,7 @@ export function DateTimePicker({
         return open ? date : initDate;
     }, [date, value, open]);
 
-    const dislayFormat = useMemo(() => {
+    const displayFormat = useMemo(() => {
         if (!displayValue) return "Pick a date";
         return format(
             displayValue,
@@ -243,7 +243,7 @@ export function DateTimePicker({
                     >
                         <div className="grow flex items-center">
                             <CalendarIcon className="mr-2 size-4" />
-                            {dislayFormat}
+                            {displayFormat}
                         </div>
                         {clearable && value && (
                             <Button
