@@ -3,7 +3,8 @@ import "@/styles/globals.css";
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import { ReactNode } from "react";
-import { Providers } from "./providers";
+
+import { Providers } from "@/app/providers";
 
 const inter = Inter({
     subsets: ["latin"],
