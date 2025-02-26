@@ -11,12 +11,10 @@ import {
     Effect,
     Function,
     HashSet,
-    Layer,
-    Logger,
-    LogLevel,
     Match,
     Number,
     Option,
+    Predicate,
     Record,
     Schema,
     Sink,
@@ -26,14 +24,17 @@ import {
 import { rpcClient } from "@/app/api/client";
 import { PipelineStepName, ResultRow, RunsInTimeRangeRequest, SchemaName, ShortPipelineName } from "@/services/Domain";
 
-// Rx runtime
-const runtime = Rx.runtime(Layer.provideMerge(FetchHttpClient.layer, Logger.minimumLogLevel(LogLevel.All)));
+/** Rx runtime. */
+const runtime = Rx.runtime(FetchHttpClient.layer);
 
 // ------------------------------------------------------------
 //            Rx Atoms for pipeline health page
 // ------------------------------------------------------------
 
-// localeRx tracks the current timezone/locale that the user has selected, which is an IANA time zone identifier
+/**
+ * "localeRx" tracks the current timezone/locale that the user has selected,
+ * which is an IANA time zone identifier.
+ */
 export const localeRx = Rx.fn<string, never, DateTime.TimeZone>(
     (locale: string, _ctx: Rx.Context): Effect.Effect<DateTime.TimeZone, never, never> =>
         Function.pipe(
@@ -42,35 +43,124 @@ export const localeRx = Rx.fn<string, never, DateTime.TimeZone>(
             Effect.succeed
         ),
     {
-        initialValue: DateTime.zoneMakeLocal(),
+        /**
+         * Default timezone is UTC because this could be on the server if in an
+         * SSR context? So we might not know the users timezone. Also, we
+         * wouldn't be able to set an initial value for from and until because
+         * what timezone would this be then?
+         */
+        initialValue: DateTime.zoneUnsafeMakeNamed("UTC"),
     }
 );
 
-// fromRx tracks the start of the time range that the user has selected
-export const fromRx = Rx.fn<DateTime.DateTime, never, DateTime.Zoned>(
-    (datetime: DateTime.DateTime, ctx: Rx.Context): Effect.Effect<DateTime.Zoned, never, never> =>
-        Effect.map(ctx.result(localeRx), (locale) => DateTime.setZone(datetime, locale))
+/**
+ * "fromRx" tracks the start of the time range that the user has selected. When
+ * setting this value, the attached timezone is ignored and the timezone from
+ * the "localeRx" is attached instead. This is because this time should always
+ * be set using the calendar component, where the user is supplying the exact
+ * time they want in the locale they have selected. So it makes sense to ignore
+ * any timezone and the local timezone and just attach the users selected
+ * timezone instead.
+ */
+export const fromRx = Rx.fn<Date | DateTime.DateTime | undefined, Cause.IllegalArgumentException, DateTime.Zoned>(
+    (
+        input: Date | DateTime.DateTime | undefined,
+        ctx: Rx.Context
+    ): Effect.Effect<DateTime.Zoned, Cause.IllegalArgumentException, never> =>
+        Effect.gen(function* () {
+            const locale = yield* ctx.result(localeRx);
+            const setZone = DateTime.setZone(locale);
+            const now = yield* DateTime.now;
+
+            const datetime = Function.pipe(
+                Match.value(input),
+                Match.when(Predicate.isDate, (d) => DateTime.make(d)),
+                Match.when(DateTime.isDateTime, (d) => Option.some(d)),
+                Match.when(Predicate.isUndefined, (_) => Option.some(now)),
+                Match.exhaustive
+            );
+
+            if (Option.isNone(datetime)) {
+                return yield* Effect.fail(new Cause.IllegalArgumentException("Invalid date"));
+            }
+
+            return setZone(datetime.value);
+        }),
+    {
+        /** Default is 72 hours ago. */
+        initialValue: Function.pipe(
+            Effect.runSync(DateTime.now),
+            DateTime.subtractDuration(Duration.hours(72)),
+            DateTime.setZone(DateTime.zoneUnsafeMakeNamed("UTC"))
+        ),
+    }
 );
 
-// untilRx tracks the end of the time range that the user has selected
-export const untilRx = Rx.fn<DateTime.DateTime, never, DateTime.Zoned>(
-    (datetime: DateTime.DateTime, ctx: Rx.Context): Effect.Effect<DateTime.Zoned, never, never> =>
-        Effect.map(ctx.result(localeRx), (locale) => DateTime.setZone(datetime, locale))
+/**
+ * "untilRx" tracks the end of the time range that the user has selected. When
+ * setting this value, the attached timezone is ignored and the timezone from
+ * the "localeRx" is attached instead. This is because this time should always
+ * be set using the calendar component, where the user is supplying the exact
+ * time they want in the locale they have selected. So it makes sense to ignore
+ * any timezone and the local timezone and just attach the users selected
+ * timezone instead.
+ */
+export const untilRx = Rx.fn<Date | DateTime.DateTime, Cause.IllegalArgumentException, DateTime.Zoned>(
+    (
+        input: Date | DateTime.DateTime | undefined,
+        ctx: Rx.Context
+    ): Effect.Effect<DateTime.Zoned, Cause.IllegalArgumentException, never> =>
+        Effect.gen(function* () {
+            const locale = yield* ctx.result(localeRx);
+            const setZone = DateTime.setZone(locale);
+            const now = yield* DateTime.now;
+
+            const datetime = Function.pipe(
+                Match.value(input),
+                Match.when(Predicate.isDate, (d) => DateTime.make(d)),
+                Match.when(DateTime.isDateTime, (d) => Option.some(d)),
+                Match.when(Predicate.isUndefined, (_) => Option.some(now)),
+                Match.exhaustive
+            );
+
+            if (Option.isNone(datetime)) {
+                return yield* Effect.fail(new Cause.IllegalArgumentException("Invalid date"));
+            }
+
+            return setZone(datetime.value);
+        }),
+    {
+        /** Default is now. */
+        initialValue: Function.pipe(
+            Effect.runSync(DateTime.now),
+            DateTime.subtractDuration(Duration.millis(0)),
+            DateTime.setZone(DateTime.zoneUnsafeMakeNamed("UTC"))
+        ),
+    }
 );
 
-// includeEmptyBucketsRx tracks whether or not to include empty buckets in the time series data
+/**
+ * "includeEmptyBucketsRx" tracks whether or not to include empty buckets in the
+ * time series data.
+ */
 export const includeEmptyBucketsRx = Rx.make<true | false>(false);
 
-// activeLabelRx tracks the currently selected label
+/** "activeLabelRx" tracks the currently selected label. */
 export const activeLabelRx = Rx.make<string | undefined>(undefined);
 
-// activeDataRx tracks whether the user is looking at successful or failed runs
-export const activeDataRx = Rx.make<"success" | "failure" | "All">("All" as const);
+/**
+ * "activeDataRx" tracks whether the user is looking at successful or failed
+ * runs.
+ */
+export const activeDataRx = Rx.make<"success" | "failure" | "all">("all" as const);
 
-// aggregateByRx tracks the time unit that the user has selected to aggregate the time series data by
+/**
+ * "aggregateByRx" tracks the time unit that the user has selected to aggregate
+ * the time series data by.
+ */
 export const aggregateByRx = Rx.make<Exclude<DateTime.DateTime.UnitPlural, "millis">>("days");
 
-// creating list of Pipeline to select from when querying
+/** "steps2queryRx" tracks the list of pipeline steps to show in the graphs. */
 export const steps2queryRx = Rx.make<HashSet.HashSet<typeof PipelineStepName.Type>>(
     HashSet.fromIterable(PipelineStepName.literals)
 );
@@ -79,9 +169,12 @@ export const steps2queryRx = Rx.make<HashSet.HashSet<typeof PipelineStepName.Typ
 //            Composed Rx's for pipeline health page
 // ------------------------------------------------------------
 
-// Fetches all the rows from the database in the time range
-export const rowsRx: Rx.RxResultFn<void, Array<ResultRow>, never> = runtime.fn(
-    (_: void, ctx: Rx.Context): Effect.Effect<Array<ResultRow>, never, HttpClient.HttpClient> =>
+/** Fetches all the rows from the database in the time range. */
+export const rowsRx: Rx.RxResultFn<void, Array<ResultRow>, Cause.IllegalArgumentException> = runtime.fn(
+    (
+        _: void,
+        ctx: Rx.Context
+    ): Effect.Effect<Array<ResultRow>, Cause.IllegalArgumentException, HttpClient.HttpClient> =>
         Effect.Do.pipe(
             Effect.bind("from", () => ctx.result(fromRx).pipe(Effect.map(DateTime.toUtc))),
             Effect.bind("until", () => ctx.result(untilRx).pipe(Effect.map(DateTime.toUtc))),
@@ -94,7 +187,7 @@ export const rowsRx: Rx.RxResultFn<void, Array<ResultRow>, never> = runtime.fn(
         )
 );
 
-// Computes the success rate, failure rate, and total number of runs
+/** Computes the success rate, failure rate, and total number of runs. */
 export const totalsRx: Rx.Rx<
     Result.Result<
         {
@@ -102,10 +195,16 @@ export const totalsRx: Rx.Rx<
             failureRate: number;
             totalRuns: number;
         },
-        never
+        Cause.IllegalArgumentException
     >
 > = runtime.rx(
-    (ctx: Rx.Context): Effect.Effect<{ successRate: number; failureRate: number; totalRuns: number }, never, never> =>
+    (
+        ctx: Rx.Context
+    ): Effect.Effect<
+        { successRate: number; failureRate: number; totalRuns: number },
+        Cause.IllegalArgumentException,
+        never
+    > =>
         Effect.gen(function* () {
             const rows = yield* ctx.result(rowsRx);
             const total = rows.length;
@@ -116,7 +215,7 @@ export const totalsRx: Rx.Rx<
         })
 );
 
-// Computes the average processing time for successful and failed runs
+/** Computes the average processing time for successful and failed runs. */
 export const timeSeriesGroupedRx: Rx.RxResultFn<
     void,
     Record<
@@ -130,7 +229,7 @@ export const timeSeriesGroupedRx: Rx.RxResultFn<
             numberSuccessfulRuns: number;
         }
     >,
-    never
+    Cause.IllegalArgumentException
 > = runtime.fn(
     (
         _: void,
@@ -147,7 +246,7 @@ export const timeSeriesGroupedRx: Rx.RxResultFn<
                 numberSuccessfulRuns: number;
             }
         >,
-        never,
+        Cause.IllegalArgumentException,
         never
     > =>
         Effect.gen(function* () {
@@ -230,7 +329,10 @@ export const timeSeriesGroupedRx: Rx.RxResultFn<
         })
 );
 
-// Formats the time series data into a format that can be displayed in the table
+/**
+ * Formats the time series data into a format that can be displayed in the
+ * table.
+ */
 export const tableDataRx: Rx.Rx<
     Result.Result<
         Array<{
@@ -244,7 +346,7 @@ export const tableDataRx: Rx.Rx<
             pipelineStepName: typeof PipelineStepName.Type;
             shortPipelineStepName: typeof ShortPipelineName.to.Type;
         }>,
-        never
+        Cause.IllegalArgumentException
     >
 > = runtime.rx(
     (
@@ -261,7 +363,7 @@ export const tableDataRx: Rx.Rx<
             pipelineStepName: typeof PipelineStepName.Type;
             shortPipelineStepName: typeof ShortPipelineName.to.Type;
         }>,
-        never,
+        Cause.IllegalArgumentException,
         never
     > =>
         Effect.gen(function* () {
