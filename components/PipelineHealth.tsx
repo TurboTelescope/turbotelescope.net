@@ -5,8 +5,8 @@ import { DateTime } from "effect";
 import { Suspense } from "react";
 
 import { AggregateBySelector } from "@/components/PipelineHealth/AggregateBySelector";
-import { DatePickerWithRange } from "@/components/PipelineHealth/DatePickerRange";
 import { EmptyBucketsToggle } from "@/components/PipelineHealth/EmptyBucketsToggle";
+import { FromUntilRange } from "@/components/PipelineHealth/FromUntilRange";
 import { LocaleSelector } from "@/components/PipelineHealth/LocaleSelector";
 import { PipelineStepHistogram } from "@/components/PipelineHealth/PipelineStepHistogram";
 import { AverageProcessingTimeLineChart } from "@/components/PipelineHealth/RunTimeHist";
@@ -23,7 +23,7 @@ export function PipelineHealth() {
         <>
             <div className="flex justify-center my-4">
                 <div className="mx-1">
-                    <DatePickerWithRange />
+                    <FromUntilRange />
                 </div>
                 <div className="mx-1">
                     <AggregateBySelector />

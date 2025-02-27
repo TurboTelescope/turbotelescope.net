@@ -618,6 +618,7 @@ type DateTimePickerProps = {
     onChange?: (date: Date | undefined) => void;
     onMonthChange?: (date: Date | undefined) => void;
     disabled?: boolean;
+    timezone?: string;
     /** Showing `AM/PM` or not. */
     hourCycle?: 12 | 24;
     placeholder?: string;
@@ -628,12 +629,6 @@ type DateTimePickerProps = {
      * and `2024 + 50 = 2074`.
      */
     yearRange?: number;
-    /**
-     * The format is derived from the `date-fns` documentation.
-     *
-     * @reference https://date-fns.org/v3.6.0/docs/format
-     */
-    displayFormat?: { hour24?: string; hour12?: string };
     /**
      * The granularity prop allows you to control the smallest unit that is
      * displayed by DateTimePicker. By default, the value is `second` which
@@ -658,13 +653,13 @@ const DateTimePicker = React.forwardRef<Partial<DateTimePickerRef>, DateTimePick
             className,
             defaultPopupValue = new Date(new Date().setHours(0, 0, 0, 0)),
             disabled = false,
-            displayFormat,
             granularity = "second",
             hourCycle = 24,
             locale = enUS,
             onChange,
             onMonthChange,
             placeholder = "Pick a date",
+            timezone = "UTC",
             value,
             yearRange = 50,
             ...props
@@ -715,11 +710,6 @@ const DateTimePicker = React.forwardRef<Partial<DateTimePickerRef>, DateTimePick
             [displayDate]
         );
 
-        const initHourFormat = {
-            hour24: displayFormat?.hour24 ?? `PPP HH:mm${!granularity || granularity === "second" ? ":ss" : ""}`,
-            hour12: displayFormat?.hour12 ?? `PP hh:mm${!granularity || granularity === "second" ? ":ss" : ""} b`,
-        };
-
         let loc = enUS;
         const { formatLong, localize, options } = locale;
         if (options && localize && formatLong) {
@@ -745,9 +735,15 @@ const DateTimePicker = React.forwardRef<Partial<DateTimePickerRef>, DateTimePick
                     >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {displayDate ? (
-                            format(displayDate, hourCycle === 24 ? initHourFormat.hour24 : initHourFormat.hour12, {
-                                locale: loc,
-                            })
+                            new Intl.DateTimeFormat(loc.code, {
+                                month: "long",
+                                day: "numeric",
+                                year: "numeric",
+                                hour: "numeric",
+                                minute: "numeric",
+                                second: "numeric",
+                                timeZone: timezone,
+                            }).format(displayDate)
                         ) : (
                             <span>{placeholder}</span>
                         )}
