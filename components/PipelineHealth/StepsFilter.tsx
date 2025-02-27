@@ -29,7 +29,7 @@ export function Steps2querySelector() {
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="outline">
-                    <span>Select Steps to Query</span>
+                    <span>Filter steps</span>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
