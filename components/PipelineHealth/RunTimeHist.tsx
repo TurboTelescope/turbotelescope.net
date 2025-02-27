@@ -1,17 +1,12 @@
 "use client";
 
-import { useRx, useRxSet, useRxSuspenseSuccess, useRxValue } from "@effect-rx/rx-react";
+import { useRxSet, useRxSuspenseSuccess, useRxValue } from "@effect-rx/rx-react";
 import { CheckIcon, Cross2Icon, DotFilledIcon } from "@radix-ui/react-icons";
 import { DateTime, Function, Option, Record } from "effect";
+import { useState } from "react";
 import { Bar, CartesianGrid, ComposedChart, Legend, Line, XAxis, YAxis } from "recharts";
 
-import {
-    activeDataRx,
-    activeLabelRx,
-    aggregateByRx,
-    timeSeriesGroupedRx,
-    totalsRx,
-} from "@/components/PipelineHealth/rx";
+import { activeLabelRx, aggregateByRx, timeSeriesGroupedRx, totalsRx } from "@/components/PipelineHealth/rx";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
@@ -74,7 +69,7 @@ export function AverageProcessingTimeLineChart() {
 
     // Sets
     const setActiveLabel = useRxSet(activeLabelRx);
-    const [activeChart, setActiveChart] = useRx(activeDataRx);
+    const [activeChart, setActiveChart] = useState<"success" | "failure" | "all">("all");
 
     // Suspends
     const totals = useRxSuspenseSuccess(totalsRx).value;

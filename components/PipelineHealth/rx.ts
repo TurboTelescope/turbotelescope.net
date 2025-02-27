@@ -149,16 +149,10 @@ export const includeEmptyBucketsRx = Rx.make<true | false>(false);
 export const activeLabelRx = Rx.make<string | undefined>(undefined);
 
 /**
- * "activeDataRx" tracks whether the user is looking at successful or failed
- * runs.
- */
-export const activeDataRx = Rx.make<"success" | "failure" | "all">("all" as const);
-
-/**
  * "aggregateByRx" tracks the time unit that the user has selected to aggregate
  * the time series data by.
  */
-export const aggregateByRx = Rx.make<Exclude<DateTime.DateTime.UnitPlural, "millis">>("days");
+export const aggregateByRx = Rx.make<Exclude<DateTime.DateTime.UnitPlural, "millis">>("seconds");
 
 /** "steps2queryRx" tracks the list of pipeline steps to show in the graphs. */
 export const steps2queryRx = Rx.make<HashSet.HashSet<typeof PipelineStepName.Type>>(
