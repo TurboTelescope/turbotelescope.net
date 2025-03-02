@@ -2,7 +2,6 @@
 
 import { useRxSuspenseSuccess } from "@effect-rx/rx-react";
 import { DateTime } from "effect";
-import { Suspense } from "react";
 
 import { AggregateBySelector } from "@/components/PipelineHealth/AggregateBySelector";
 import { EmptyBucketsToggle } from "@/components/PipelineHealth/EmptyBucketsToggle";
@@ -43,17 +42,15 @@ export function PipelineHealth() {
                 {DateTime.formatIsoZoned(until)}
             </span>
 
-            <Suspense fallback={<p>Loading...</p>}>
-                <div className="my-2 mx-2">
-                    <AverageProcessingTimeLineChart />
-                </div>
-                <div className="my-2 mx-2">
-                    <PipelineStepHistogram />
-                </div>
-                <div className="my-2 mx-2">
-                    <RunsTable />
-                </div>
-            </Suspense>
+            <div className="my-2 mx-2">
+                <AverageProcessingTimeLineChart />
+            </div>
+            <div className="my-2 mx-2">
+                <PipelineStepHistogram />
+            </div>
+            <div className="my-2 mx-2">
+                <RunsTable />
+            </div>
         </>
     );
 }

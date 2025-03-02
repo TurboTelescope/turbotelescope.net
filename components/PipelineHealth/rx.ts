@@ -11,6 +11,7 @@ import {
     Effect,
     Function,
     HashSet,
+    Layer,
     Match,
     Number,
     Option,
@@ -25,7 +26,14 @@ import { rpcClient } from "@/app/api/client";
 import { PipelineStepName, ResultRow, RunsInTimeRangeRequest, SchemaName, ShortPipelineName } from "@/services/Domain";
 
 /** Rx runtime. */
-const runtime = Rx.runtime(FetchHttpClient.layer);
+const runtime = Rx.runtime(
+    Layer.provide(
+        FetchHttpClient.layer,
+        Layer.succeed(FetchHttpClient.RequestInit, {
+            cache: "no-store",
+        })
+    )
+);
 
 // ------------------------------------------------------------
 //            Rx Atoms for pipeline health page
@@ -88,11 +96,12 @@ export const fromRx = Rx.fn<Date | DateTime.DateTime | undefined, Cause.IllegalA
         }),
     {
         /** Default is 72 hours ago. */
-        initialValue: Function.pipe(
-            Effect.runSync(DateTime.now),
-            DateTime.subtractDuration(Duration.hours(72)),
-            DateTime.setZone(DateTime.zoneUnsafeMakeNamed("UTC"))
-        ),
+        // Can't do this here because it will cause hydration warning and client rerenders.
+        // initialValue: Function.pipe(
+        //     Effect.runSync(DateTime.now),
+        //     DateTime.subtractDuration(Duration.hours(72)),
+        //     DateTime.setZone(DateTime.zoneUnsafeMakeNamed("UTC"))
+        // ),
     }
 );
 
@@ -131,11 +140,12 @@ export const untilRx = Rx.fn<Date | DateTime.DateTime | undefined, Cause.Illegal
         }),
     {
         /** Default is now. */
-        initialValue: Function.pipe(
-            Effect.runSync(DateTime.now),
-            DateTime.subtractDuration(Duration.millis(0)),
-            DateTime.setZone(DateTime.zoneUnsafeMakeNamed("UTC"))
-        ),
+        // Can't do this here because it will cause hydration warning and client rerenders.
+        // initialValue: Function.pipe(
+        //     Effect.runSync(DateTime.now),
+        //     DateTime.subtractDuration(Duration.millis(0)),
+        //     DateTime.setZone(DateTime.zoneUnsafeMakeNamed("UTC"))
+        // ),
     }
 );
 
