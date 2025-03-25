@@ -20,7 +20,7 @@
 
 "use client";
 
-import { Result, useRx } from "@effect-rx/rx-react";
+import { useRxSet, useRxSuspenseSuccess } from "@effect-rx/rx-react";
 import { DateTime } from "effect";
 
 import { localeRx } from "@/components/PipelineHealth/rx";
@@ -34,7 +34,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function LocaleSelector() {
-    const [locale, setLocale] = useRx(localeRx);
+    const locale = useRxSuspenseSuccess(localeRx).value;
+    const setLocale = useRxSet(localeRx);
 
     return (
         <DropdownMenu>
@@ -45,7 +46,7 @@ export function LocaleSelector() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuRadioGroup
-                    value={DateTime.zoneToString(Result.getOrThrow(locale))}
+                    value={DateTime.zoneToString(locale)}
                     onValueChange={(str) => setLocale(str as "UTC" | "America/Chicago")}
                 >
                     <DropdownMenuRadioItem value={"UTC"}>Utc</DropdownMenuRadioItem>

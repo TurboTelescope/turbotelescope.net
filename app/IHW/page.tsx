@@ -1,95 +1,36 @@
-// "use server";
+"use server";
 
-// import { DateTime, Duration, Effect, Function } from "effect";
-// import { Suspense } from "react";
+import { DateTime, Duration, Effect, Function, Option } from "effect";
 
-// import { PipelineHealth } from "@/components/PipelineHealth";
-// import { ModeToggle } from "@/components/ThemeToggle";
+import { PipelineHealth } from "@/components/PipelineHealth";
+import { ModeToggle } from "@/components/ThemeToggle";
 
-// export default async function Page() {
-//     const serverFrom = Function.pipe(
-//         Effect.runSync(DateTime.now),
-//         DateTime.subtractDuration(Duration.millis(0)),
-//         DateTime.setZone(DateTime.zoneUnsafeMakeNamed("UTC"))
-//     );
+export default async function Page() {
+    const timezone = DateTime.zoneMakeNamed("UTC").pipe(Option.getOrThrow);
 
-//     const serverUntil = Function.pipe(
-//         Effect.runSync(DateTime.now),
-//         DateTime.subtractDuration(Duration.hours(72)),
-//         DateTime.setZone(DateTime.zoneUnsafeMakeNamed("UTC"))
-//     );
+    const serverUntil = Function.pipe(
+        Effect.runSync(DateTime.now),
+        DateTime.subtractDuration(Duration.millis(0)),
+        DateTime.setZone(timezone)
+    );
 
-//     // Hydration
-//     // useRxInitialValues([
-//     //     Rx.initialValue(fromRx, Result.success(serverFrom)),
-//     //     Rx.initialValue(untilRx, Result.success(serverUntil)),
-//     // ]);
-
-//     return (
-//         <>
-//             <div className="fixed bottom-5 right-5 z-50">
-//                 <ModeToggle />
-//             </div>
-//             <Suspense fallback={<p>Loading...</p>}>
-//                 <PipelineHealth />
-//             </Suspense>
-//         </>
-//     );
-// }
-
-"use client";
-
-import { useRxSuspenseSuccess } from "@effect-rx/rx-react";
-import { DateTime } from "effect";
-
-import { AggregateBySelector } from "@/components/PipelineHealth/AggregateBySelector";
-import { EmptyBucketsToggle } from "@/components/PipelineHealth/EmptyBucketsToggle";
-import { FromUntilRange } from "@/components/PipelineHealth/FromUntilRange";
-import { LocaleSelector } from "@/components/PipelineHealth/LocaleSelector";
-import { PipelineStepHistogram } from "@/components/PipelineHealth/PipelineStepHistogram";
-import { AverageProcessingTimeLineChart } from "@/components/PipelineHealth/RunTimeHist";
-import { Steps2querySelector } from "@/components/PipelineHealth/StepsFilter";
-import { RunsTable } from "@/components/PipelineHealth/Table";
-import { fromRx, totalsRx, untilRx } from "@/components/PipelineHealth/rx";
-
-export default function Page() {
-    const from = useRxSuspenseSuccess(fromRx).value;
-    const until = useRxSuspenseSuccess(untilRx).value;
-    const totals = useRxSuspenseSuccess(totalsRx).value;
+    const serverFrom = Function.pipe(
+        Effect.runSync(DateTime.now),
+        DateTime.subtractDuration(Duration.hours(72)),
+        DateTime.setZone(timezone)
+    );
 
     return (
         <>
-            <div className="flex justify-center my-4">
-                <div className="mx-1">
-                    <FromUntilRange />
-                </div>
-                <div className="mx-1">
-                    <AggregateBySelector />
-                </div>
-                <div className="mx-1">
-                    <EmptyBucketsToggle />
-                </div>
-                <div className="mx-1">
-                    <LocaleSelector />
-                </div>
-                <div className="mx-1">
-                    <Steps2querySelector />
-                </div>
+            <div className="fixed bottom-5 right-5 z-50">
+                <ModeToggle />
             </div>
-            <span className="flex justify-center my-4 text-sm text-muted-foreground">
-                Selected {totals.totalRuns} images between {DateTime.formatIsoZoned(from)} and{" "}
-                {DateTime.formatIsoZoned(until)}
-            </span>
 
-            <div className="my-2 mx-2">
-                <AverageProcessingTimeLineChart />
-            </div>
-            <div className="my-2 mx-2">
-                <PipelineStepHistogram />
-            </div>
-            <div className="my-2 mx-2">
-                <RunsTable />
-            </div>
+            <PipelineHealth
+                timezone={DateTime.zoneToString(timezone)}
+                serverFrom={DateTime.formatIsoZoned(serverFrom)}
+                serverUntil={DateTime.formatIsoZoned(serverUntil)}
+            />
         </>
     );
 }

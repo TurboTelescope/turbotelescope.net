@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-
 export default function Custom500() {
     return (
         <div style={{ textAlign: "center", marginTop: "50px" }}>

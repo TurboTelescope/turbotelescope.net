@@ -1,7 +1,8 @@
 "use client";
 
-import { useRxSuspenseSuccess } from "@effect-rx/rx-react";
-import { DateTime } from "effect";
+import { Result, Rx, useRxInitialValues, useRxSuspenseSuccess, useRxValue } from "@effect-rx/rx-react";
+import { Cause, DateTime, Exit, Function } from "effect";
+import { Suspense } from "react";
 
 import { AggregateBySelector } from "@/components/PipelineHealth/AggregateBySelector";
 import { EmptyBucketsToggle } from "@/components/PipelineHealth/EmptyBucketsToggle";
@@ -11,15 +12,55 @@ import { PipelineStepHistogram } from "@/components/PipelineHealth/PipelineStepH
 import { AverageProcessingTimeLineChart } from "@/components/PipelineHealth/RunTimeHist";
 import { Steps2querySelector } from "@/components/PipelineHealth/StepsFilter";
 import { RunsTable } from "@/components/PipelineHealth/Table";
-import { fromRx, totalsRx, untilRx } from "@/components/PipelineHealth/rx";
+import { fromRx, localeRx, totalsRx, untilRx } from "@/components/PipelineHealth/rx";
 
-export function PipelineHealth() {
-    const from = useRxSuspenseSuccess(fromRx).value;
-    const until = useRxSuspenseSuccess(untilRx).value;
-    const totals = useRxSuspenseSuccess(totalsRx).value;
+export function PipelineHealth({
+    serverFrom,
+    serverUntil,
+    timezone,
+}: {
+    serverFrom: string;
+    serverUntil: string;
+    timezone: string;
+}) {
+    // Hydration
+    useRxInitialValues([
+        Rx.initialValue(
+            localeRx,
+            Function.pipe(
+                DateTime.zoneFromString(timezone),
+                Exit.fromOption,
+                Exit.mapError(() => new Cause.IllegalArgumentException("Invalid timzone from server")),
+                Result.fromExit
+            )
+        ),
+        Rx.initialValue(
+            fromRx,
+            Function.pipe(
+                DateTime.makeZonedFromString(serverFrom),
+                Exit.fromOption,
+                Exit.mapError(() => new Cause.IllegalArgumentException("Invalid serverFrom from server")),
+                Result.fromExit
+            )
+        ),
+        Rx.initialValue(
+            untilRx,
+            Function.pipe(
+                DateTime.makeZonedFromString(serverUntil),
+                Exit.fromOption,
+                Exit.mapError(() => new Cause.IllegalArgumentException("Invalid serverUntil from server")),
+                Result.fromExit
+            )
+        ),
+    ]);
+
+    // Gets
+    const from = useRxValue(fromRx).pipe(Result.getOrThrow);
+    const until = useRxValue(untilRx).pipe(Result.getOrThrow);
+    const totals = useRxValue(totalsRx).pipe(Result.getOrElse(() => [] as any));
 
     return (
-        <>
+        <Suspense>
             <div className="flex justify-center my-4">
                 <div className="mx-1">
                     <FromUntilRange />
@@ -51,6 +92,6 @@ export function PipelineHealth() {
             <div className="my-2 mx-2">
                 <RunsTable />
             </div>
-        </>
+        </Suspense>
     );
 }

@@ -138,6 +138,14 @@ export class PipelineStepName extends Schema.Literal(
     "Making cutouts ",
     "save the image",
 
+    // NEW!!!!
+    "Perform basic data reduction",
+    "Assign reference image",
+    "Filter image by the shape of sources",
+    "Subtract background and generate source catalog",
+    "Add image to reference stack",
+    "Generate bad pixel map",
+
     // TODO: Find where to insert these in the order:
     "Finding the five sigma upper limit of magnitude",
     "Post annotations from MPC query",
@@ -218,7 +226,7 @@ export class ShortPipelineName extends Schema.transform(
                 Match.when("Create bad pixel mask from raw image", () => "Bad Pix Map" as const),
                 Match.when("Finding the five sigma upper limit of magnitude", () => "Five Sigma" as const),
                 Match.when("Post annotations from MPC query", () => "MPC Query" as const),
-                Match.exhaustive
+                Match.orElse(() => "Bad Pix Map" as const)
             ),
     }
 ) {}
@@ -249,8 +257,8 @@ export class ImagesTableRow extends Schema.Class<ImagesTableRow>("ImagesTableRow
         Schema.Literal(".fits")
     ),
     objectId: Schema.String,
-    ra: Schema.Number,
-    dec: Schema.Number,
+    ra: Schema.NullOr(Schema.Number),
+    dec: Schema.NullOr(Schema.Number),
     quality: Schema.NullOr(Schema.String),
     ncoadds: Schema.NullOr(Schema.Number),
     referencePath: Schema.NullOr(Schema.String),
