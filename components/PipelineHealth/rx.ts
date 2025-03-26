@@ -9,7 +9,6 @@ import {
     DateTime,
     Duration,
     Effect,
-    Either,
     Function,
     HashSet,
     Layer,
@@ -44,11 +43,12 @@ const runtime = Rx.runtime(
  * "localeRx" tracks the current timezone/locale that the user has selected,
  * which is an IANA time zone identifier.
  */
-export const localeRx = Rx.fn<string, Cause.IllegalArgumentException, DateTime.TimeZone>(
-    (locale: string, _ctx: Rx.Context): Effect.Effect<DateTime.TimeZone, Cause.IllegalArgumentException, never> =>
+export const localeRx = Rx.fn<string, never, DateTime.TimeZone>(
+    (locale: string, _ctx: Rx.Context): Effect.Effect<DateTime.TimeZone, never, never> =>
         Function.pipe(
             DateTime.zoneMakeNamed(locale),
-            Either.fromOption(() => new Cause.IllegalArgumentException("Invalid timezone"))
+            Option.getOrThrowWith(() => new Cause.IllegalArgumentException("Invalid timezone")),
+            Effect.succeed
         ),
     {
         /**
@@ -57,7 +57,7 @@ export const localeRx = Rx.fn<string, Cause.IllegalArgumentException, DateTime.T
          * wouldn't be able to set an initial value for from and until because
          * what timezone would this be then?
          */
-        // initialValue: DateTime.zoneMakeNamed("UTC").pipe(Option.getOrElse(DateTime.zoneMakeLocal)),
+        initialValue: DateTime.zoneUnsafeMakeNamed("UTC"),
     }
 );
 
@@ -100,7 +100,7 @@ export const fromRx = Rx.fn<Date | DateTime.DateTime | undefined, Cause.IllegalA
         // initialValue: Function.pipe(
         //     Effect.runSync(DateTime.now),
         //     DateTime.subtractDuration(Duration.hours(72)),
-        //     DateTime.setZone(DateTime.zoneMakeNamed("UTC").pipe(Option.getOrElse(DateTime.zoneMakeLocal)))
+        //     DateTime.setZone(DateTime.zoneUnsafeMakeNamed("UTC"))
         // ),
     }
 );
@@ -144,7 +144,7 @@ export const untilRx = Rx.fn<Date | DateTime.DateTime | undefined, Cause.Illegal
         // initialValue: Function.pipe(
         //     Effect.runSync(DateTime.now),
         //     DateTime.subtractDuration(Duration.millis(0)),
-        //     DateTime.setZone(DateTime.zoneMakeNamed("UTC").pipe(Option.getOrElse(DateTime.zoneMakeLocal)))
+        //     DateTime.setZone(DateTime.zoneUnsafeMakeNamed("UTC"))
         // ),
     }
 );
