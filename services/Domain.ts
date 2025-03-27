@@ -12,8 +12,8 @@ export type Tail<T extends ReadonlyArray<unknown>> = T extends
 export type Split<StrInput extends string, Delimiter extends string> = string extends StrInput | ""
     ? Array<string>
     : StrInput extends `${infer Head}${Delimiter}${infer Rest}`
-      ? [Head, ...Split<Rest, Delimiter>]
-      : [StrInput];
+    ? [Head, ...Split<Rest, Delimiter>]
+    : [StrInput];
 
 /** @internal */
 export const tail = <T extends ReadonlyArray<unknown>>(elements: T): Tail<T> => elements.slice(1) as Tail<T>;
@@ -119,7 +119,7 @@ export class SchemaName extends Schema.transformOrFail(
                 }
             }),
     }
-) {}
+) { }
 
 /** Pipeline step names for lightweight runtime */
 export class PipelineStepName extends Schema.Literal(
@@ -132,11 +132,19 @@ export class PipelineStepName extends Schema.Literal(
     "Align ref to sci and propagate wcs from ref to sci",
     "Run Sfft Subtraction",
     "Extract sources from difference image",
-    "Filter out candidates close to stars ",
+    "Filter out candidates close to stars",
     "Calculate zeropoint of image",
     "Calculate real-bogus score for candidates",
     "Making cutouts ",
     "save the image",
+
+    // NEW!!!!
+    "Perform basic data reduction",
+    "Assign reference image",
+    "Filter image by the shape of sources",
+    "Subtract background and generate source catalog",
+    "Add image to reference stack",
+    "Generate bad pixel map",
 
     // TODO: Find where to insert these in the order:
     "Finding the five sigma upper limit of magnitude",
@@ -146,7 +154,7 @@ export class PipelineStepName extends Schema.Literal(
     "skyportal_logging",
     "Align ref to sci and propogate wcs from ref to sci",
     "Create bad pixel mask from raw image"
-) {}
+) { }
 
 /** Short pipeline step names for lightweight runtime */
 
@@ -184,7 +192,7 @@ export class ShortPipelineName extends Schema.transform(
                 Match.when("Align Ref", () => "Align ref to sci and propagate wcs from ref to sci" as const),
                 Match.when("Run Sfft", () => "Run Sfft Subtraction" as const),
                 Match.when("Extract Sources", () => "Extract sources from difference image" as const),
-                Match.when("Fltr Near Stars", () => "Filter out candidates close to stars " as const),
+                Match.when("Fltr Near Stars", () => "Filter out candidates close to stars" as const),
                 Match.when("Zero Point", () => "Calculate zeropoint of image" as const),
                 Match.when("Real-Bogus", () => "Calculate real-bogus score for candidates" as const),
                 Match.when("Cutouts", () => "Making cutouts " as const),
@@ -209,7 +217,7 @@ export class ShortPipelineName extends Schema.transform(
                 ),
                 Match.when("Run Sfft Subtraction", () => "Run Sfft" as const),
                 Match.when("Extract sources from difference image", () => "Extract Sources" as const),
-                Match.when("Filter out candidates close to stars ", () => "Fltr Near Stars" as const),
+                Match.when("Filter out candidates close to stars", () => "Fltr Near Stars" as const), // Fixed
                 Match.when("Calculate zeropoint of image", () => "Zero Point" as const),
                 Match.when("Calculate real-bogus score for candidates", () => "Real-Bogus" as const),
                 Match.when("Making cutouts ", () => "Cutouts" as const),
@@ -218,10 +226,10 @@ export class ShortPipelineName extends Schema.transform(
                 Match.when("Create bad pixel mask from raw image", () => "Bad Pix Map" as const),
                 Match.when("Finding the five sigma upper limit of magnitude", () => "Five Sigma" as const),
                 Match.when("Post annotations from MPC query", () => "MPC Query" as const),
-                Match.exhaustive
+                Match.orElse(() => "MPC Query" as const)
             ),
     }
-) {}
+) { }
 
 /** Schema for Image Status tables */
 export class ImageStatusTableRow extends Schema.Class<ImageStatusTableRow>("ImageStatusTableRow")({
@@ -229,7 +237,7 @@ export class ImageStatusTableRow extends Schema.Class<ImageStatusTableRow>("Imag
     pipelineStep: PipelineStepName,
     processingTime: Schema.Number,
     completion: Schema.String,
-}) {}
+}) { }
 
 /** Schema for Images Table rows tables */
 export class ImagesTableRow extends Schema.Class<ImagesTableRow>("ImagesTableRow")({
@@ -248,14 +256,14 @@ export class ImagesTableRow extends Schema.Class<ImagesTableRow>("ImagesTableRow
         Schema.String,
         Schema.Literal(".fits")
     ),
-    objectId: Schema.String,
-    ra: Schema.Number,
-    dec: Schema.Number,
-    quality: Schema.NullOr(Schema.String),
-    ncoadds: Schema.NullOr(Schema.Number),
-    referencePath: Schema.NullOr(Schema.String),
-    referenceDistance: Schema.NullOr(Schema.Number),
-}) {}
+    // object_id: Schema.String,
+    // ra: Schema.NullOr(Schema.Number),
+    // dec: Schema.NullOr(Schema.Number),
+    // quality: Schema.NullOr(Schema.String),
+    // ncoadds: Schema.NullOr(Schema.Number),
+    // referencePath: Schema.NullOr(Schema.String),
+    // referenceDistance: Schema.NullOr(Schema.Number),
+}) { }
 
 export class ResultRow extends Schema.Class<ResultRow>("ResultRow")({
     ...ImagesTableRow.fields,
@@ -275,22 +283,22 @@ export class RunsInTimeRangeRequest extends Schema.TaggedRequest<RunsInTimeRange
     failure: Schema.Never,
     success: Schema.Record({ key: SchemaName.from, value: Schema.Array(ResultRow) }),
     payload: { from: Schema.DateTimeUtc, until: Schema.DateTimeUtc },
-}) {}
+}) { }
 
 export class SubscribeToRunsRequest extends Rpc.StreamRequest<SubscribeToRunsRequest>()("SubscribeToRunsRequest", {
     failure: Schema.Never,
     success: Schema.Record({ key: SchemaName.from, value: Schema.Array(ResultRow) }),
     payload: { from: Schema.DateTimeUtc, refreshInterval: Schema.DurationFromSelf },
-}) {}
+}) { }
 
 export class VerboseLogRequest extends Rpc.StreamRequest<VerboseLogRequest>()("VerboseLogRequest", {
     failure: Schema.Never,
     success: Schema.Uint8Array,
     payload: { schemaName: SchemaName.from, machine: Schema.Literal("tlenaii", "popcorn") },
-}) {}
+}) { }
 
 export class VerboseLogURLRequest extends Schema.TaggedRequest<VerboseLogURLRequest>()("VerboseLogURLRequest", {
     failure: Schema.Never,
     success: Schema.String,
     payload: { schemaName: SchemaName.from, machine: Schema.Literal("tlenaii", "popcorn") },
-}) {}
+}) { }
