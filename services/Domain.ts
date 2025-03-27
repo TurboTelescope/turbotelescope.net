@@ -132,7 +132,7 @@ export class PipelineStepName extends Schema.Literal(
     "Align ref to sci and propagate wcs from ref to sci",
     "Run Sfft Subtraction",
     "Extract sources from difference image",
-    "Filter out candidates close to stars ",
+    "Filter out candidates close to stars",
     "Calculate zeropoint of image",
     "Calculate real-bogus score for candidates",
     "Making cutouts ",
@@ -192,7 +192,7 @@ export class ShortPipelineName extends Schema.transform(
                 Match.when("Align Ref", () => "Align ref to sci and propagate wcs from ref to sci" as const),
                 Match.when("Run Sfft", () => "Run Sfft Subtraction" as const),
                 Match.when("Extract Sources", () => "Extract sources from difference image" as const),
-                Match.when("Fltr Near Stars", () => "Filter out candidates close to stars " as const),
+                Match.when("Fltr Near Stars", () => "Filter out candidates close to stars" as const),
                 Match.when("Zero Point", () => "Calculate zeropoint of image" as const),
                 Match.when("Real-Bogus", () => "Calculate real-bogus score for candidates" as const),
                 Match.when("Cutouts", () => "Making cutouts " as const),
@@ -217,7 +217,7 @@ export class ShortPipelineName extends Schema.transform(
                 ),
                 Match.when("Run Sfft Subtraction", () => "Run Sfft" as const),
                 Match.when("Extract sources from difference image", () => "Extract Sources" as const),
-                Match.when("Filter out candidates close to stars ", () => "Fltr Near Stars" as const),
+                Match.when("Filter out candidates close to stars", () => "Fltr Near Stars" as const), // Fixed
                 Match.when("Calculate zeropoint of image", () => "Zero Point" as const),
                 Match.when("Calculate real-bogus score for candidates", () => "Real-Bogus" as const),
                 Match.when("Making cutouts ", () => "Cutouts" as const),
@@ -226,7 +226,7 @@ export class ShortPipelineName extends Schema.transform(
                 Match.when("Create bad pixel mask from raw image", () => "Bad Pix Map" as const),
                 Match.when("Finding the five sigma upper limit of magnitude", () => "Five Sigma" as const),
                 Match.when("Post annotations from MPC query", () => "MPC Query" as const),
-                Match.orElse(() => "Bad Pix Map" as const)
+                Match.orElse(() => "MPC Query" as const)
             ),
     }
 ) {}
@@ -256,13 +256,13 @@ export class ImagesTableRow extends Schema.Class<ImagesTableRow>("ImagesTableRow
         Schema.String,
         Schema.Literal(".fits")
     ),
-    objectId: Schema.String,
-    ra: Schema.NullOr(Schema.Number),
-    dec: Schema.NullOr(Schema.Number),
-    quality: Schema.NullOr(Schema.String),
-    ncoadds: Schema.NullOr(Schema.Number),
-    referencePath: Schema.NullOr(Schema.String),
-    referenceDistance: Schema.NullOr(Schema.Number),
+    // object_id: Schema.String,
+    // ra: Schema.NullOr(Schema.Number),
+    // dec: Schema.NullOr(Schema.Number),
+    // quality: Schema.NullOr(Schema.String),
+    // ncoadds: Schema.NullOr(Schema.Number),
+    // referencePath: Schema.NullOr(Schema.String),
+    // referenceDistance: Schema.NullOr(Schema.Number),
 }) {}
 
 export class ResultRow extends Schema.Class<ResultRow>("ResultRow")({

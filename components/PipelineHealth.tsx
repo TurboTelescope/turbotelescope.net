@@ -1,6 +1,6 @@
 "use client";
 
-import { Result, Rx, useRxInitialValues, useRxSuspenseSuccess, useRxValue } from "@effect-rx/rx-react";
+import { Result, Rx, useRxInitialValues, useRxValue } from "@effect-rx/rx-react";
 import { Cause, DateTime, Exit, Function } from "effect";
 import { Suspense } from "react";
 
@@ -57,7 +57,7 @@ export function PipelineHealth({
     // Gets
     const from = useRxValue(fromRx).pipe(Result.getOrThrow);
     const until = useRxValue(untilRx).pipe(Result.getOrThrow);
-    const totals = useRxValue(totalsRx).pipe(Result.getOrElse(() => [] as any));
+    const totals = useRxValue(totalsRx).pipe(Result.getOrElse(() => [] as Array<{ totalRuns: number }>));
 
     return (
         <Suspense>
@@ -79,8 +79,9 @@ export function PipelineHealth({
                 </div>
             </div>
             <span className="flex justify-center my-4 text-sm text-muted-foreground">
-                Selected {totals.totalRuns} images between {DateTime.formatIsoZoned(from)} and{" "}
-                {DateTime.formatIsoZoned(until)}
+                Selected{" "}
+                {Array.isArray(totals) ? totals.reduce((sum, item) => sum + item.totalRuns, 0) : totals.totalRuns}{" "}
+                images between {DateTime.formatIsoZoned(from)} and {DateTime.formatIsoZoned(until)}
             </span>
 
             <div className="my-2 mx-2">

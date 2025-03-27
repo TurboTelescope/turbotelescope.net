@@ -50,7 +50,7 @@ const make = Effect.gen(function* () {
                 Effect.allWith({ concurrency: "unbounded" })
             )
         );
-
+    //rm: IMAGES.exposure_time, IMAGES.observation_date,
     const getDataByTableName = SqlResolver.grouped("getDataByTableName", {
         withContext: true,
         Request: SchemaName.from,
@@ -67,19 +67,26 @@ const make = Effect.gen(function* () {
                 ids,
                 (tableName) => `
                 SELECT
-                    IMAGE_STATUS.*,
-                    IMAGES.*,
+                    IMAGE_STATUS.image_id,
+                    IMAGE_STATUS.pipeline_step,
+                    IMAGE_STATUS.processing_time,
+                    IMAGE_STATUS.completion,
+                    IMAGES.file_path,
+
                     '${tableName}' as source_table
                 FROM "${tableName}".image_status AS IMAGE_STATUS
                 LEFT JOIN "${tableName}".images AS IMAGES
                 ON IMAGE_STATUS.image_id = IMAGES.image_id`
             );
 
-            return sql.unsafe<ResultRow>(`
+            const query = `
                 WITH combined_data AS (
                     ${unionQueries.join("\n\n    UNION ALL\n")}
                 )
-                SELECT * FROM combined_data;`);
+                SELECT * FROM combined_data;`;
+
+            //console.log("Generated SQL Query:", query); // Log the query for debugging
+            return sql.unsafe<ResultRow>(query);
         },
     });
 
