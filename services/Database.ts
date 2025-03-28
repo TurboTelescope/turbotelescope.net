@@ -50,6 +50,9 @@ const make = Effect.gen(function* () {
                 Effect.allWith({ concurrency: "unbounded" })
             )
         );
+    //Getting long and short names from the database
+    //const getPipelineStepNames = SqlResolver.grouped("getPipelineStepNames", {...
+
     //rm: IMAGES.exposure_time, IMAGES.observation_date,
     const getDataByTableName = SqlResolver.grouped("getDataByTableName", {
         withContext: true,

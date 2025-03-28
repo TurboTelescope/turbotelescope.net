@@ -67,7 +67,8 @@ export const getRefURL = (
         ".webp"
     );
 };
-
+//{/* {row.status == "Yes" ? "View Image" : ""} */}
+//Sci
 export function RunsTable() {
     const tableData = useRxSuspenseSuccess(tableDataRx).value;
     const steps2query = useRxValue(steps2queryRx);
@@ -109,42 +110,44 @@ export function RunsTable() {
                                     <ChevronDown />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    <DropdownMenuItem>
-                                        <Link
-                                            key={1}
-                                            href={{
-                                                pathname: getSciURL(row.file),
-                                            }}
-                                            target="_blank"
-                                        >
+                                    <Link
+                                        key={1}
+                                        href={{
+                                            pathname: getSciURL(row.file),
+                                        }}
+                                        target="_blank"
+                                    >
+                                        <DropdownMenuItem>
                                             {/* {row.status == "Yes" ? "View Image" : ""} */}
                                             Sci
-                                        </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <Link
-                                            key={2}
-                                            href={{
-                                                pathname: getDiffURL(row.file),
-                                            }}
-                                            target="_blank"
-                                        >
+                                        </DropdownMenuItem>
+                                    </Link>
+
+                                    <Link
+                                        key={2}
+                                        href={{
+                                            pathname: getSciURL(row.file),
+                                        }}
+                                        target="_blank"
+                                    >
+                                        <DropdownMenuItem>
                                             {/* {row.status == "Yes" ? "View Image" : ""} */}
                                             Diff
-                                        </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <Link
-                                            key={3}
-                                            href={{
-                                                pathname: getRefURL(row.file),
-                                            }}
-                                            target="_blank"
-                                        >
+                                        </DropdownMenuItem>
+                                    </Link>
+
+                                    <Link
+                                        key={3}
+                                        href={{
+                                            pathname: getSciURL(row.file),
+                                        }}
+                                        target="_blank"
+                                    >
+                                        <DropdownMenuItem>
                                             {/* {row.status == "Yes" ? "View Image" : ""} */}
                                             Ref
-                                        </Link>
-                                    </DropdownMenuItem>
+                                        </DropdownMenuItem>
+                                    </Link>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>
