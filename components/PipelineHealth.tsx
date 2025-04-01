@@ -30,7 +30,7 @@ export function PipelineHealth({
             Function.pipe(
                 DateTime.zoneFromString(timezone),
                 Exit.fromOption,
-                Exit.mapError(() => new Cause.IllegalArgumentException("Invalid timzone from server")),
+                Exit.mapError(() => new Cause.IllegalArgumentException("Invalid timezone from server")),
                 Result.fromExit
             )
         ),
@@ -57,7 +57,13 @@ export function PipelineHealth({
     // Gets
     const from = useRxValue(fromRx).pipe(Result.getOrThrow);
     const until = useRxValue(untilRx).pipe(Result.getOrThrow);
-    const totals = useRxValue(totalsRx).pipe(Result.getOrElse(() => [] as Array<{ totalRuns: number }>));
+    const totals = useRxValue(totalsRx).pipe(
+        Result.getOrElse(() => ({
+            successRate: 0,
+            failureRate: 0,
+            totalRuns: 0,
+        }))
+    );
 
     return (
         <Suspense>
