@@ -6,7 +6,7 @@ import { PipelineHealth } from "@/components/PipelineHealth";
 import { ModeToggle } from "@/components/ThemeToggle";
 
 export default async function Page() {
-    const timezone = DateTime.zoneMakeNamed("UTC").pipe(Option.getOrThrow);
+    const timezone = DateTime.zoneMakeNamed("America/Chicago").pipe(Option.getOrThrow);
 
     const serverUntil = Function.pipe(
         Effect.runSync(DateTime.now),

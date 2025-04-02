@@ -192,6 +192,8 @@ export const rowsRx: Rx.Rx<Result.Result<Array<ResultRow>, Cause.IllegalArgument
 export const totalsRx: Rx.Rx<
     Result.Result<
         {
+            failedRuns: number;
+            successfulRuns: number;
             successRate: number;
             failureRate: number;
             totalRuns: number;
@@ -202,7 +204,7 @@ export const totalsRx: Rx.Rx<
     (
         ctx: Rx.Context
     ): Effect.Effect<
-        { successRate: number; failureRate: number; totalRuns: number },
+        { failedRuns: number; successfulRuns: number; successRate: number; failureRate: number; totalRuns: number },
         Cause.IllegalArgumentException,
         never
     > =>
@@ -212,7 +214,13 @@ export const totalsRx: Rx.Rx<
             const [failures, successes] = Array.partition(rows, ({ success }) => success);
             const failureRate = Number.divide(failures.length, total).pipe(Option.getOrElse(() => 0)) * 100;
             const successRate = Number.divide(successes.length, total).pipe(Option.getOrElse(() => 0)) * 100;
-            return { successRate, failureRate, totalRuns: total };
+            return {
+                failedRuns: failures.length,
+                successfulRuns: successes.length,
+                successRate,
+                failureRate,
+                totalRuns: total,
+            };
         })
 );
 

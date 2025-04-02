@@ -1,27 +1,30 @@
 "use client";
 
 import { useRxSet, useRxSuspenseSuccess, useRxValue } from "@effect-rx/rx-react";
-import { CheckIcon, Cross2Icon, DotFilledIcon } from "@radix-ui/react-icons";
-import { DateTime, Function, Option, Record } from "effect";
-import { useState } from "react";
+import { CheckIcon, Cross2Icon } from "@radix-ui/react-icons";
+import { DateTime, Function, Match, Option, Record } from "effect";
+import { useMemo, useState } from "react";
 import { Bar, CartesianGrid, ComposedChart, Legend, Line, XAxis, YAxis } from "recharts";
 
 import { activeLabelRx, aggregateByRx, timeSeriesGroupedRx, totalsRx } from "@/components/PipelineHealth/rx";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { SigmaIcon } from "lucide-react";
 
-const chart1 = "thirtySecondThreshold" as const;
+const chart1 = "sumOfSuccessAndFail" as const;
 const chart2 = "averageSuccessProcessingTime" as const;
 const chart3 = "averageFailureProcessingTime" as const;
 const chart4 = "numberOfSuccessfulRuns" as const;
 const chart5 = "numberOfFailedRuns" as const;
 const chart6 = "averageProcessingTimeAllRuns" as const;
+const chart7 = "numberOfAllRuns" as const;
 
 export const chartConfigs = {
     [chart1]: {
-        label: "30sec threshold",
-        color: "hsl(var(--chart-3))",
-        icon: DotFilledIcon,
+        label: "Total",
+        title: "sum success fail",
+        color: "#FFFFFF",
+        icon: SigmaIcon,
     },
     [chart2]: {
         color: "#00cc00",
@@ -42,7 +45,7 @@ export const chartConfigs = {
         icon: Cross2Icon,
     },
     [chart4]: {
-        color: "#FF0000",
+        color: "#00cc00",
         title: "Number of Successful Runs",
         label: "Number of Successful Runs",
         icon: CheckIcon,
@@ -51,6 +54,11 @@ export const chartConfigs = {
         color: "#FFFFFF",
         title: "All Runs",
         label: "Average Processing Time",
+    },
+    [chart7]: {
+        color: "#FFFFFF",
+        title: "All Runs",
+        label: "All Runs",
     },
 } satisfies ChartConfig;
 
@@ -77,37 +85,80 @@ export function AverageProcessingTimeLineChart() {
 
     // Data mapping
     const chartTotals = {
+        [chart1]: `${totals.successfulRuns + totals.failedRuns}`,
         [chart2]: `${totals.successRate.toFixed(1)}%`,
         [chart3]: `${totals.failureRate.toFixed(1)}%`,
+        [chart4]: `${totals.successfulRuns}`,
+        [chart5]: `${totals.failedRuns}`,
         [chart6]: "Show All",
+        [chart7]: `${totals.totalRuns}`,
     };
     const chartData: MappedData = Record.values(
-        Record.map(
-            timeSeriesData,
-            ({ avgFailTime, avgSuccessTime, numberFailedRuns, numberSuccessfulRuns, threshold }, key) => ({
-                date: key,
-                [chart1]: threshold,
-                [chart2]: avgSuccessTime,
-                [chart3]: avgFailTime,
-                [chart4]: numberFailedRuns,
-                [chart5]: numberSuccessfulRuns,
-            })
-        )
+        Record.map(timeSeriesData, ({ avgFailTime, avgSuccessTime, numberFailedRuns, numberSuccessfulRuns }, key) => ({
+            date: key,
+            [chart1]: numberFailedRuns + numberSuccessfulRuns,
+            [chart2]: avgSuccessTime,
+            [chart3]: avgFailTime,
+            [chart4]: numberFailedRuns,
+            [chart5]: numberSuccessfulRuns,
+        }))
     );
-    const activeChartKey = activeChart === "all" ? chart6 : activeChart === "success" ? chart2 : chart3;
+    const activeChartKey = activeChart === "all" ? chart7 : activeChart === "success" ? chart4 : chart5;
+
+    //dynamically updates chart x-axis based on aggregate by selection
+    const XaxisTickFormatter: (self: DateTime.DateTime) => string = useMemo(
+        () =>
+            Function.pipe(
+                Match.value(aggregateBy),
+                Match.when("years", () => DateTime.formatUtc({ locale: "en-US", year: "numeric" })),
+                Match.when("months", () => DateTime.formatUtc({ locale: "en-US", month: "long", year: "numeric" })),
+                Match.when("days", () => DateTime.formatUtc({ locale: "en-US", month: "short", day: "numeric" })),
+                Match.when("hours", () =>
+                    DateTime.formatUtc({ locale: "en-US", month: "short", day: "numeric", hour: "numeric" })
+                ),
+                Match.when("minutes", () =>
+                    DateTime.formatUtc({
+                        locale: "en-US",
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "numeric",
+                    })
+                ),
+                Match.when("seconds", () =>
+                    DateTime.formatUtc({
+                        locale: "en-US",
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "numeric",
+                        second: "numeric",
+                    })
+                ),
+                Match.orElse(() => DateTime.formatUtc({ locale: "en-US", month: "short", day: "numeric" }))
+            ),
+        [aggregateBy]
+    );
 
     // Chart implementation
     return (
         <Card>
             <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
                 <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
-                    <CardTitle>Average processing time per {aggregateBy}</CardTitle>
-                    <CardDescription>
-                        Showing the average processing time for {activeChart} runs grouped by {aggregateBy}
-                    </CardDescription>
+                    <CardTitle>
+                        Showing the number of {activeChart} runs grouped by {aggregateBy}
+                    </CardTitle>
+
+                    <span className="text-xs text-muted-foreground">
+                        {chartConfigs[chart2].title} = {chartTotals[chart2]}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                        {chartConfigs[chart3].title} = {chartTotals[chart3]}
+                    </span>
+                    <span className="text-xs text-muted-foreground">Total Number of Runs = {chartTotals[chart7]}</span>
                 </div>
                 <div className="flex">
-                    {[chart2, chart3, chart6].map((chart) => {
+                    {[chart4, chart5, chart6].map((chart) => {
                         return (
                             <button
                                 key={chart}
@@ -116,7 +167,7 @@ export function AverageProcessingTimeLineChart() {
                                 onClick={() =>
                                     chart === "averageProcessingTimeAllRuns"
                                         ? setActiveChart("all")
-                                        : chart === "averageSuccessProcessingTime"
+                                        : chart === "numberOfSuccessfulRuns"
                                           ? setActiveChart("success")
                                           : setActiveChart("failure")
                                 }
@@ -129,7 +180,7 @@ export function AverageProcessingTimeLineChart() {
                 </div>
             </CardHeader>
             <CardContent className="px-2 sm:p-6">
-                <ChartContainer config={chartConfigs} className="aspect-auto h-[250px] w-full">
+                <ChartContainer config={chartConfigs} className="aspect-auto h-[350px] w-full">
                     <ComposedChart
                         onClick={(event) => setActiveLabel(event.activeLabel)}
                         accessibilityLayer
@@ -137,6 +188,7 @@ export function AverageProcessingTimeLineChart() {
                         margin={{
                             left: 12,
                             right: 12,
+                            bottom: aggregateBy === "seconds" || aggregateBy === "minutes" ? 70 : 40,
                         }}
                     >
                         <CartesianGrid />
@@ -146,13 +198,11 @@ export function AverageProcessingTimeLineChart() {
                             axisLine={false}
                             tickMargin={8}
                             minTickGap={32}
-                            tickFormatter={Function.flow(
-                                DateTime.make,
-                                Option.getOrThrow,
-                                DateTime.formatUtc({ locale: "en-US", month: "short", day: "numeric" })
-                            )}
+                            angle={aggregateBy === "seconds" || aggregateBy === "minutes" ? -45 : 0}
+                            textAnchor={aggregateBy === "seconds" || aggregateBy === "minutes" ? "end" : "middle"}
+                            tickFormatter={Function.flow(DateTime.make, Option.getOrThrow, XaxisTickFormatter)}
                         />
-                        <YAxis tickLine={true} axisLine={false} tickMargin={8} tickFormatter={(value) => `${value}s`} />
+                        <YAxis tickLine={true} axisLine={false} tickMargin={8} tickFormatter={(value) => `${value}`} />
                         <ChartTooltip
                             includeHidden
                             payloadUniqBy={({ dataKey }) => dataKey}
@@ -182,12 +232,7 @@ export function AverageProcessingTimeLineChart() {
                                     type: "square",
                                     value: chartConfigs[activeChartKey].label,
                                     color: chartConfigs[activeChartKey].color,
-                                },
-                                {
-                                    id: chart1,
-                                    type: "line",
-                                    value: chartConfigs[chart1].label,
-                                    color: chartConfigs[chart1].color,
+                                    legendIcon: activeChartKey === chart7 ? <></> : undefined,
                                 },
                             ]}
                             verticalAlign="top"
@@ -197,10 +242,10 @@ export function AverageProcessingTimeLineChart() {
 
                         {activeChart === "all" ? (
                             <Bar
-                                key={`${chart6}.${chart2}-bar`}
-                                dataKey={`${chart2}`}
+                                key={`${chart7}.${chart4}-bar`}
+                                dataKey={`${chart4}`}
                                 type="monotone"
-                                fill={`var(--color-${chart2})`}
+                                fill={`var(--color-${chart4})`}
                                 fillOpacity={0.5}
                             />
                         ) : (
@@ -208,10 +253,10 @@ export function AverageProcessingTimeLineChart() {
                         )}
                         {activeChart === "all" ? (
                             <Bar
-                                key={`${chart6}.${chart3}-bar`}
-                                dataKey={`${chart3}`}
+                                key={`${chart7}.${chart5}-bar`}
+                                dataKey={`${chart5}`}
                                 type="monotone"
-                                fill={`var(--color-${chart3})`}
+                                fill={`var(--color-${chart5})`}
                                 fillOpacity={0.5}
                             />
                         ) : (
@@ -220,30 +265,37 @@ export function AverageProcessingTimeLineChart() {
 
                         {activeChart !== "all" ? (
                             <Bar
-                                key={activeChart === "success" ? `${chart2}-bar` : `${chart3}-bar`}
-                                dataKey={activeChart === "success" ? chart2 : chart3}
+                                key={activeChart === "success" ? `${chart4}-bar` : `${chart5}-bar`}
+                                dataKey={activeChart === "success" ? chart4 : chart5}
                                 type="monotone"
-                                fill={`var(--color-${activeChart === "success" ? chart2 : chart3})`}
+                                fill={`var(--color-${activeChart === "success" ? chart4 : chart5})`}
                                 fillOpacity={0.5}
                             />
                         ) : (
                             <></>
                         )}
 
-                        <Line
-                            dataKey={chart1}
-                            type="monotone"
-                            stroke={`var(--color-${chart1})`}
-                            strokeWidth={1}
-                            strokeDasharray={"3 3"}
-                            dot={false}
-                        />
+                        {activeChart === "all" ? (
+                            <Line
+                                dataKey={chart1}
+                                type="monotone"
+                                stroke={`var(--color-${chart1})`}
+                                strokeWidth={1}
+                                strokeDasharray={"3 3"}
+                                dot={false}
+                                hide={true}
+                            />
+                        ) : (
+                            <></>
+                        )}
 
                         {/* Enables Chart of Hover based on active chart */}
                         {activeChart === "success" ? (
-                            <Line dataKey={chart4} hide />
+                            <Line dataKey={chart2} hide />
                         ) : activeChart === "failure" ? (
-                            <Line dataKey={chart5} hide />
+                            <Line dataKey={chart3} hide />
+                        ) : activeChart === "all" ? (
+                            <Line dataKey={chart7} hide />
                         ) : null}
                     </ComposedChart>
                 </ChartContainer>

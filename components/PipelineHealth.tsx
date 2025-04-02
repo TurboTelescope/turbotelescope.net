@@ -65,6 +65,27 @@ export function PipelineHealth({
         }))
     );
 
+    const {
+        day: until_day,
+        hours: until_hours,
+        // millis: until_millis,
+        minutes: until_minutes,
+        month: until_month,
+        // seconds: until_seconds,
+        // weekDay: until_weekDay,
+        // year: until_year,
+    } = DateTime.toParts(until);
+    const {
+        day: from_day,
+        hours: from_hours,
+        // millis: from_millis,
+        minutes: from_minutes,
+        month: from_month,
+        // seconds: from_seconds,
+        // weekDay: from_weekDay,
+        // year: from_year,
+    } = DateTime.toParts(from);
+
     return (
         <Suspense>
             <div className="flex justify-center my-4">
@@ -87,7 +108,14 @@ export function PipelineHealth({
             <span className="flex justify-center my-4 text-sm text-muted-foreground">
                 Selected{" "}
                 {Array.isArray(totals) ? totals.reduce((sum, item) => sum + item.totalRuns, 0) : totals.totalRuns}{" "}
-                images between {DateTime.formatIsoZoned(from)} and {DateTime.formatIsoZoned(until)}
+                images From:&nbsp;
+                <p className="font-bold">
+                    {from_month}/{from_day} @ {from_hours}:{from_minutes}
+                </p>
+                &nbsp;Until:&nbsp;
+                <p className="font-bold">
+                    {until_month}/{until_day} @ {until_hours}:{until_minutes}
+                </p>
             </span>
 
             <div className="my-2 mx-2">
