@@ -1,9 +1,9 @@
-"use server";
-
 import { DateTime, Duration, Effect, Function, Option } from "effect";
 
 import { PipelineHealth } from "@/components/PipelineHealth";
 import { ModeToggle } from "@/components/ThemeToggle";
+
+export const dynamic = "force-dynamic";
 
 export default async function Page() {
     const timezone = DateTime.zoneMakeNamed("America/Chicago").pipe(Option.getOrThrow);
