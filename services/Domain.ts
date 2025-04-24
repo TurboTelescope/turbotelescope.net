@@ -1,4 +1,4 @@
-import { Rpc } from "@effect/rpc";
+import { Rpc, RpcGroup } from "@effect/rpc";
 import { DateTime, Effect, Function, Option, ParseResult, Schema } from "effect";
 
 /** @internal */
@@ -170,26 +170,10 @@ export class ResultRow extends Schema.Class<ResultRow>("ResultRow")({
     }
 }
 
-export class RunsInTimeRangeRequest extends Schema.TaggedRequest<RunsInTimeRangeRequest>()("RunsInTimeRangeRequest", {
-    failure: Schema.Never,
-    success: Schema.Record({ key: SchemaName.from, value: Schema.Array(ResultRow) }),
-    payload: { from: Schema.DateTimeUtc, until: Schema.DateTimeUtc },
-}) {}
-
-export class SubscribeToRunsRequest extends Rpc.StreamRequest<SubscribeToRunsRequest>()("SubscribeToRunsRequest", {
-    failure: Schema.Never,
-    success: Schema.Record({ key: SchemaName.from, value: Schema.Array(ResultRow) }),
-    payload: { from: Schema.DateTimeUtc, refreshInterval: Schema.DurationFromSelf },
-}) {}
-
-export class VerboseLogRequest extends Rpc.StreamRequest<VerboseLogRequest>()("VerboseLogRequest", {
-    failure: Schema.Never,
-    success: Schema.Uint8Array,
-    payload: { schemaName: SchemaName.from, machine: Schema.Literal("tlenaii", "popcorn") },
-}) {}
-
-export class VerboseLogURLRequest extends Schema.TaggedRequest<VerboseLogURLRequest>()("VerboseLogURLRequest", {
-    failure: Schema.Never,
-    success: Schema.String,
-    payload: { schemaName: SchemaName.from, machine: Schema.Literal("tlenaii", "popcorn") },
-}) {}
+export class DatabaseRpcs extends RpcGroup.make(
+    Rpc.make("RunsInTimeRangeRequest", {
+        error: Schema.Never,
+        success: Schema.Record({ key: SchemaName.from, value: Schema.Array(ResultRow) }),
+        payload: { from: Schema.DateTimeUtc, until: Schema.DateTimeUtc },
+    })
+) {}

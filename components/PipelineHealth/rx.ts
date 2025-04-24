@@ -1,7 +1,7 @@
 "use client";
 
 import { Result, Rx } from "@effect-rx/rx-react";
-import { FetchHttpClient, HttpClient } from "@effect/platform";
+import { FetchHttpClient } from "@effect/platform";
 import {
     Array,
     Brand,
@@ -19,22 +19,28 @@ import {
     Option,
     Predicate,
     Record,
+    Scope,
     Sink,
     Stream,
 } from "effect";
 
-import { rpcClient } from "@/app/api/client";
-import { ResultRow, RunsInTimeRangeRequest, SchemaName } from "@/services/Domain";
+import { DatabaseRpcs, ResultRow, SchemaName } from "@/services/Domain";
+import { RpcClient, RpcSerialization } from "@effect/rpc";
+
+// Choose which protocol to use
+const ProtocolLive = RpcClient.layerProtocolHttp({
+    url: `${process.env.NEXT_PUBLIC_URL}/api`,
+}).pipe(
+    Layer.provide([
+        // use fetch for http requests
+        FetchHttpClient.layer,
+        // use ndjson for serialization
+        RpcSerialization.layerNdjson,
+    ])
+);
 
 /** Rx runtime. */
-const runtime = Rx.runtime(
-    Layer.provide(
-        FetchHttpClient.layer,
-        Layer.succeed(FetchHttpClient.RequestInit, {
-            cache: "no-store",
-        })
-    )
-);
+const runtime = Rx.runtime(ProtocolLive);
 
 // ------------------------------------------------------------
 //            Rx Atoms for pipeline health page
@@ -173,13 +179,14 @@ export const steps2queryRx = Rx.make<HashSet.HashSet<string>>(HashSet.empty());
 
 /** Fetches all the rows from the database in the time range. */
 export const rowsRx: Rx.Rx<Result.Result<Array<ResultRow>, Cause.IllegalArgumentException>> = runtime.rx(
-    (ctx: Rx.Context): Effect.Effect<Array<ResultRow>, Cause.IllegalArgumentException, HttpClient.HttpClient> =>
+    (
+        ctx: Rx.Context
+    ): Effect.Effect<Array<ResultRow>, Cause.IllegalArgumentException, RpcClient.Protocol | Scope.Scope> =>
         Effect.Do.pipe(
             Effect.bind("from", () => ctx.result(fromRx).pipe(Effect.map(DateTime.toUtc))),
             Effect.bind("until", () => ctx.result(untilRx).pipe(Effect.map(DateTime.toUtc))),
-            Effect.let("request", ({ from, until }) => new RunsInTimeRangeRequest({ from, until })),
-            Effect.bind("client", () => rpcClient),
-            Effect.flatMap(({ client, request }) => client(request)),
+            Effect.bind("client", () => RpcClient.make(DatabaseRpcs)),
+            Effect.flatMap(({ client, from, until }) => client.RunsInTimeRangeRequest({ from, until })),
             Effect.map(Record.values),
             Effect.map(Array.flatten),
             Effect.map(Array.filter(({ pipelineStep }) => HashSet.has(ctx.get(steps2queryRx), pipelineStep)))
