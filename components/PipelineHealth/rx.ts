@@ -4,6 +4,7 @@ import { Result, Rx } from "@effect-rx/rx-react";
 import { FetchHttpClient, HttpClient } from "@effect/platform";
 import {
     Array,
+    Brand,
     Cause,
     Chunk,
     DateTime,
@@ -18,13 +19,12 @@ import {
     Option,
     Predicate,
     Record,
-    Schema,
     Sink,
     Stream,
 } from "effect";
 
 import { rpcClient } from "@/app/api/client";
-import { PipelineStepName, ResultRow, RunsInTimeRangeRequest, SchemaName, ShortPipelineName } from "@/services/Domain";
+import { ResultRow, RunsInTimeRangeRequest, SchemaName } from "@/services/Domain";
 
 /** Rx runtime. */
 const runtime = Rx.runtime(
@@ -165,9 +165,7 @@ export const activeLabelRx = Rx.make<string | undefined>(undefined);
 export const aggregateByRx = Rx.make<Exclude<DateTime.DateTime.UnitPlural, "millis">>("seconds");
 
 /** "steps2queryRx" tracks the list of pipeline steps to show in the graphs. */
-export const steps2queryRx = Rx.make<HashSet.HashSet<typeof PipelineStepName.Type>>(
-    HashSet.fromIterable(PipelineStepName.literals)
-);
+export const steps2queryRx = Rx.make<HashSet.HashSet<string>>(HashSet.empty());
 
 // ------------------------------------------------------------
 //            Composed Rx's for pipeline health page
@@ -352,8 +350,8 @@ export const tableDataRx: Rx.Rx<
             run: DateTime.Utc;
             processingTime: number;
             schemaName: typeof SchemaName.Encoded;
-            pipelineStepName: typeof PipelineStepName.Type;
-            shortPipelineStepName: typeof ShortPipelineName.to.Type;
+            pipelineStepName: string & Brand.Brand<"pipelineStep">;
+            description: string;
         }>,
         Cause.IllegalArgumentException
     >
@@ -369,8 +367,8 @@ export const tableDataRx: Rx.Rx<
             run: DateTime.Utc;
             processingTime: number;
             schemaName: typeof SchemaName.Encoded;
-            pipelineStepName: typeof PipelineStepName.Type;
-            shortPipelineStepName: typeof ShortPipelineName.to.Type;
+            pipelineStepName: string & Brand.Brand<"pipelineStep">;
+            description: string;
         }>,
         Cause.IllegalArgumentException,
         never
@@ -386,21 +384,15 @@ export const tableDataRx: Rx.Rx<
                 ({ entries }) => entries
             );
 
-            const withShortNames = yield* Function.pipe(
-                Array.map(selectedRows, (row) =>
-                    Effect.map(Schema.decode(ShortPipelineName)(row.pipelineStep), (shortPipelineStepName) => ({
-                        run: row.date,
-                        file: row.filePath,
-                        message: row.completion,
-                        schemaName: row.sourceTable,
-                        processingTime: row.processingTime,
-                        pipelineStepName: row.pipelineStep,
-                        shortPipelineStepName,
-                    }))
-                ),
-                Effect.allWith(),
-                Effect.orDie
-            );
+            const withShortNames = Array.map(selectedRows, (row) => ({
+                run: row.date,
+                file: row.filePath,
+                message: row.completion,
+                schemaName: row.sourceTable,
+                processingTime: row.processingTime,
+                pipelineStepName: row.pipelineStep,
+                description: row.description,
+            }));
 
             return withShortNames;
         })

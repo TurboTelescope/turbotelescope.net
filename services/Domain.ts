@@ -1,5 +1,5 @@
 import { Rpc } from "@effect/rpc";
-import { DateTime, Effect, Function, Match, Option, ParseResult, Schema } from "effect";
+import { DateTime, Effect, Function, Option, ParseResult, Schema } from "effect";
 
 /** @internal */
 export type Tail<T extends ReadonlyArray<unknown>> = T extends
@@ -121,120 +121,11 @@ export class SchemaName extends Schema.transformOrFail(
     }
 ) {}
 
-/** Pipeline step names for lightweight runtime */
-export class PipelineStepName extends Schema.Literal(
-    "Bad pix map generation",
-    "Basic data reduction",
-    "Subtract Background and generate source cat",
-    "filter image by the shape of sources",
-    "Assign Reference from file",
-    "Assign Reference",
-    "Align ref to sci and propagate wcs from ref to sci",
-    "Run Sfft Subtraction",
-    "Extract sources from difference image",
-    "Filter out candidates close to stars",
-    "Calculate zeropoint of image",
-    "Calculate real-bogus score for candidates",
-    "Making cutouts ",
-    "save the image",
-
-    // NEW!!!!
-    "Perform basic data reduction",
-    "Assign reference image",
-    "Filter image by the shape of sources",
-    "Subtract background and generate source catalog",
-    "Add image to reference stack",
-    "Generate bad pixel map",
-
-    // TODO: Find where to insert these in the order:
-    "Finding the five sigma upper limit of magnitude",
-    "Post annotations from MPC query",
-
-    // "Retired" steps
-    "skyportal_logging",
-    "Align ref to sci and propogate wcs from ref to sci",
-    "Create bad pixel mask from raw image"
-) {}
-
-/** Short pipeline step names for lightweight runtime */
-
-export class ShortPipelineName extends Schema.transform(
-    PipelineStepName,
-    Schema.Literal(
-        "Bad Pix Map",
-        "Data Reduction",
-        "Subtract",
-        "Fltr Shape",
-        "Assign Ref",
-        "Align Ref",
-        "Run Sfft",
-        "Extract Sources",
-        "Fltr Near Stars",
-        "Zero Point",
-        "Real-Bogus",
-        "Cutouts",
-        "Save",
-        "Skyportal",
-
-        // TODO: Find where to insert these in the order:
-        "Five Sigma",
-        "MPC Query"
-    ),
-    {
-        encode: (shortName) =>
-            Function.pipe(
-                Match.value<typeof shortName>(shortName),
-                Match.when("Bad Pix Map", () => "Bad pix map generation" as const),
-                Match.when("Data Reduction", () => "Basic data reduction" as const),
-                Match.when("Subtract", () => "Subtract Background and generate source cat" as const),
-                Match.when("Fltr Shape", () => "filter image by the shape of sources" as const),
-                Match.when("Assign Ref", () => "Assign Reference from file" as const),
-                Match.when("Align Ref", () => "Align ref to sci and propagate wcs from ref to sci" as const),
-                Match.when("Run Sfft", () => "Run Sfft Subtraction" as const),
-                Match.when("Extract Sources", () => "Extract sources from difference image" as const),
-                Match.when("Fltr Near Stars", () => "Filter out candidates close to stars" as const),
-                Match.when("Zero Point", () => "Calculate zeropoint of image" as const),
-                Match.when("Real-Bogus", () => "Calculate real-bogus score for candidates" as const),
-                Match.when("Cutouts", () => "Making cutouts " as const),
-                Match.when("Save", () => "save the image" as const),
-                Match.when("Skyportal", () => "skyportal_logging" as const),
-                Match.when("Five Sigma", () => "Finding the five sigma upper limit of magnitude" as const),
-                Match.when("MPC Query", () => "Post annotations from MPC query" as const),
-                Match.exhaustive
-            ),
-        decode: (longName) =>
-            Function.pipe(
-                Match.value<typeof longName>(longName),
-                Match.when("Bad pix map generation", () => "Bad Pix Map" as const),
-                Match.when("Basic data reduction", () => "Data Reduction" as const),
-                Match.when("Subtract Background and generate source cat", () => "Subtract" as const),
-                Match.when("filter image by the shape of sources", () => "Fltr Shape" as const),
-                Match.whenOr("Assign Reference from file", "Assign Reference", () => "Assign Ref" as const),
-                Match.whenOr(
-                    "Align ref to sci and propagate wcs from ref to sci",
-                    "Align ref to sci and propogate wcs from ref to sci",
-                    () => "Align Ref" as const
-                ),
-                Match.when("Run Sfft Subtraction", () => "Run Sfft" as const),
-                Match.when("Extract sources from difference image", () => "Extract Sources" as const),
-                Match.when("Filter out candidates close to stars", () => "Fltr Near Stars" as const), // Fixed
-                Match.when("Calculate zeropoint of image", () => "Zero Point" as const),
-                Match.when("Calculate real-bogus score for candidates", () => "Real-Bogus" as const),
-                Match.when("Making cutouts ", () => "Cutouts" as const),
-                Match.when("save the image", () => "Save" as const),
-                Match.when("skyportal_logging", () => "Skyportal" as const),
-                Match.when("Create bad pixel mask from raw image", () => "Bad Pix Map" as const),
-                Match.when("Finding the five sigma upper limit of magnitude", () => "Five Sigma" as const),
-                Match.when("Post annotations from MPC query", () => "MPC Query" as const),
-                Match.orElse(() => "MPC Query" as const)
-            ),
-    }
-) {}
-
 /** Schema for Image Status tables */
 export class ImageStatusTableRow extends Schema.Class<ImageStatusTableRow>("ImageStatusTableRow")({
     imageId: Schema.Number,
-    pipelineStep: PipelineStepName,
+    pipelineStep: Schema.String.pipe(Schema.brand("pipelineStep")),
+    description: Schema.String,
     processingTime: Schema.Number,
     completion: Schema.String,
 }) {}

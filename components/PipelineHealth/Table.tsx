@@ -91,7 +91,7 @@ export function RunsTable() {
                 {filterTableData.map((row, index) => (
                     <TableRow key={index}>
                         <TableCell className="font-medium">{DateTime.formatIso(row.run)}</TableCell>
-                        <TableCell>{row.shortPipelineStepName}</TableCell>
+                        <TableCell>{row.pipelineStepName}</TableCell>
                         <TableCell>{row.processingTime}</TableCell>
                         <TableCell>{row.file}</TableCell>
                         <TableCell>

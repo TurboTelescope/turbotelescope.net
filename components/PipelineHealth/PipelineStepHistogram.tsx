@@ -1,15 +1,13 @@
 "use client";
-
 import { useRxSuspenseSuccess } from "@effect-rx/rx-react";
-import { Array, Function, Option, Record, Schema, Tuple } from "effect";
+import { Array, Brand, Function, Record, Tuple } from "effect";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { rowsRx } from "@/components/PipelineHealth/rx";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { PipelineStepName, ShortPipelineName } from "@/services/Domain";
 
-const chart1 = "percentPipelineFailure" as const;
+const chart1 = "pipelineFailure" as const;
 
 export const chartConfigs = {
     [chart1]: {
@@ -20,7 +18,7 @@ export const chartConfigs = {
 } satisfies ChartConfig;
 
 export type MappedData = Array<{
-    pipelineStep: typeof PipelineStepName.Type;
+    pipelineStep: string & Brand.Brand<"pipelineStep">;
     [chart1]: number;
 }>;
 
@@ -31,22 +29,8 @@ export function PipelineStepHistogram() {
         Array.partition(rows, ({ success }) => success),
         Tuple.getFirst,
         Array.groupBy(({ pipelineStep }) => pipelineStep),
-        Record.map((rows, key) => ({ [chart1]: rows.length, pipelineStep: key as typeof PipelineStepName.Type }))
-    );
-
-    const buckets = PipelineStepName.literals;
-    const bucketsWithFailures = Function.pipe(
-        buckets,
-        Array.map((bucketIdentifier) => {
-            const group = Record.get(chartData, bucketIdentifier).pipe(
-                Option.getOrElse(() => ({ pipelineStep: bucketIdentifier, [chart1]: 0 }))
-            );
-            return group;
-        })
-    );
-
-    const sorted = bucketsWithFailures.sort(
-        (a, b) => PipelineStepName.literals.indexOf(a.pipelineStep) - PipelineStepName.literals.indexOf(b.pipelineStep)
+        Record.map((rows, key) => ({ [chart1]: rows.length, pipelineStep: key })),
+        Record.values
     );
 
     return (
@@ -61,7 +45,7 @@ export function PipelineStepHistogram() {
                 <ChartContainer config={chartConfigs} className="aspect-auto h-[250px] w-full">
                     <BarChart
                         accessibilityLayer
-                        data={sorted}
+                        data={chartData}
                         margin={{
                             left: 12,
                             right: 12,
@@ -73,9 +57,7 @@ export function PipelineStepHistogram() {
                             tickLine={true}
                             axisLine={false}
                             tickMargin={8}
-                            tickFormatter={(longName: typeof PipelineStepName.Type) =>
-                                Schema.decodeSync(ShortPipelineName)(longName)
-                            }
+                            tickFormatter={(longName) => longName}
                         />
                         <YAxis tickLine={true} axisLine={false} tickMargin={8} tickFormatter={(value) => `${value}`} />
                         <ChartTooltip content={<ChartTooltipContent className="w-[275px]" />} />

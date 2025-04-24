@@ -40,14 +40,14 @@ export const chartConfigs = {
     },
     [chart5]: {
         color: "#FF0000",
-        title: "Number of Failed Runs",
-        label: "Number of Failed Runs",
+        title: "Images Unsuccessfully Processed",
+        label: "Images Unsccessfully Processed",
         icon: Cross2Icon,
     },
     [chart4]: {
         color: "#00cc00",
-        title: "Number of Successful Runs",
-        label: "Number of Successful Runs",
+        title: "Images Successfully Processed",
+        label: "Images Successfully Processed",
         icon: CheckIcon,
     },
     [chart6]: {
@@ -146,7 +146,13 @@ export function AverageProcessingTimeLineChart() {
             <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
                 <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
                     <CardTitle>
-                        Showing the number of {activeChart} runs grouped by {aggregateBy}
+                        Showing{" "}
+                        {activeChart === "success"
+                            ? "the Number of Successfully"
+                            : activeChart === "failure"
+                              ? "the Number of Unsuccessfully"
+                              : "All"}{" "}
+                        Processed Images Grouped by {aggregateBy}
                     </CardTitle>
 
                     <span className="text-xs text-muted-foreground">
@@ -203,6 +209,7 @@ export function AverageProcessingTimeLineChart() {
                             tickFormatter={Function.flow(DateTime.make, Option.getOrThrow, XaxisTickFormatter)}
                         />
                         <YAxis tickLine={true} axisLine={false} tickMargin={8} tickFormatter={(value) => `${value}`} />
+
                         <ChartTooltip
                             includeHidden
                             payloadUniqBy={({ dataKey }) => dataKey}
@@ -226,15 +233,31 @@ export function AverageProcessingTimeLineChart() {
                             }
                         />
                         <Legend
-                            payload={[
-                                {
-                                    id: activeChartKey,
-                                    type: "square",
-                                    value: chartConfigs[activeChartKey].label,
-                                    color: chartConfigs[activeChartKey].color,
-                                    legendIcon: activeChartKey === chart7 ? <></> : undefined,
-                                },
-                            ]}
+                            payload={
+                                activeChartKey === "numberOfAllRuns"
+                                    ? [
+                                          {
+                                              id: "numberOfFailedRuns",
+                                              type: "square",
+                                              value: chartConfigs["numberOfFailedRuns"].label,
+                                              color: chartConfigs["numberOfFailedRuns"].color,
+                                          },
+                                          {
+                                              id: "numberOfSuccessfulRuns",
+                                              type: "square",
+                                              value: chartConfigs["numberOfSuccessfulRuns"].label,
+                                              color: chartConfigs["numberOfSuccessfulRuns"].color,
+                                          },
+                                      ]
+                                    : [
+                                          {
+                                              id: activeChartKey,
+                                              type: "square",
+                                              value: chartConfigs[activeChartKey].label,
+                                              color: chartConfigs[activeChartKey].color,
+                                          },
+                                      ]
+                            }
                             verticalAlign="top"
                             align="left"
                             height={36}

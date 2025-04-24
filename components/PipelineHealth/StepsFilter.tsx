@@ -8,10 +8,10 @@
 
 "use client";
 
-import { useRx } from "@effect-rx/rx-react";
-import { HashSet, Schema } from "effect";
+import { Result, useRx, useRxValue } from "@effect-rx/rx-react";
+import { Array, Function, HashSet, Record } from "effect";
 
-import { steps2queryRx } from "@/components/PipelineHealth/rx";
+import { steps2queryRx, tableDataRx } from "@/components/PipelineHealth/rx";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -20,10 +20,17 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PipelineStepName, ShortPipelineName } from "@/services/Domain";
 
 export function Steps2querySelector() {
+    const tableData = useRxValue(tableDataRx).pipe(Result.getOrThrow);
     const [steps2query, setSteps2query] = useRx(steps2queryRx);
+
+    const a = Array.groupBy(tableData, (row) => row.pipelineStepName);
+
+    const allPipelineStepNames = Function.pipe(
+        Record.values(a),
+        Array.map(([{ pipelineStepName }]) => pipelineStepName)
+    );
 
     return (
         <DropdownMenu>
@@ -36,7 +43,7 @@ export function Steps2querySelector() {
                 <DropdownMenuItem
                     onSelect={(event) => {
                         event.preventDefault();
-                        setSteps2query(HashSet.fromIterable(PipelineStepName.literals));
+                        setSteps2query(HashSet.fromIterable(allPipelineStepNames));
                     }}
                 >
                     Select All
@@ -49,22 +56,21 @@ export function Steps2querySelector() {
                 >
                     Unselect All
                 </DropdownMenuItem>
-                {ShortPipelineName.to.literals.map((shortName, i) => {
-                    const longName = Schema.encodeSync(ShortPipelineName)(shortName);
+                {allPipelineStepNames.map((Name, i) => {
                     return (
                         <DropdownMenuCheckboxItem
                             key={i}
-                            checked={HashSet.has(steps2query, longName)}
+                            checked={HashSet.has(steps2query, Name)}
                             onSelect={(event) => event.preventDefault()}
                             onCheckedChange={(checked) => {
                                 if (checked == true) {
-                                    setSteps2query(HashSet.add(steps2query, longName));
+                                    setSteps2query(HashSet.add(steps2query, Name));
                                 } else {
-                                    setSteps2query(HashSet.remove(steps2query, longName));
+                                    setSteps2query(HashSet.remove(steps2query, Name));
                                 }
                             }}
                         >
-                            {shortName}
+                            {Name}
                         </DropdownMenuCheckboxItem>
                     );
                 })}

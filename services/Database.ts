@@ -1,3 +1,5 @@
+//TODO: #16 infallible pipeline step names :3
+
 import { SqlClient, SqlError, SqlResolver } from "@effect/sql";
 import { PgClient } from "@effect/sql-pg";
 import {
@@ -137,7 +139,47 @@ const make = Effect.gen(function* () {
             return Stream.concat(backlog, reactive);
         }).pipe(Stream.unwrap);
 
-    return { getDataInRange, subscribeToDataInRange, getTableNamesInRange } as const;
+    /**
+     * The function `getPipelineStepNamesInRange` retrieves pipeline step names
+     * within a specified date range using Effect monads in TypeScript.
+     *
+     * @param from - The `from` parameter represents the starting point in time
+     *   for the range you want to query. It is of type `DateTime.Utc`.
+     * @param until - The `until` parameter represents the end date and time in
+     *   UTC format for the range within which you want to retrieve pipeline
+     *   step names.
+     */
+    const getPipelineStepNamesInRange = (
+        from: DateTime.Utc,
+        until: DateTime.Utc
+    ): Effect.Effect<
+        Record.ReadonlyRecord<typeof SchemaName.Encoded, Array<string>>,
+        ParseResult.ParseError | SqlError.SqlError,
+        never
+    > =>
+        Effect.Do.pipe(
+            Effect.bind("tableNamesInRange", () => getTableNamesInRange(from, until)),
+            Effect.flatMap(({ tableNamesInRange }) =>
+                Function.pipe(
+                    tableNamesInRange,
+                    Record.fromIterableWith((tableName) => {
+                        // const a = sql.unsafe<{ pipelineStep: string }>(
+                        //     `SELECT pipeline_step FROM "${tableName}".status;`
+                        // );
+                        // console.log(a.compile());
+                        return Tuple.make(
+                            tableName,
+
+                            sql<{ pipelineStep: string }>`SELECT pipeline_step FROM "${tableName}".status;`.pipe(
+                                Effect.map(Array.map(({ pipelineStep }) => pipelineStep))
+                            )
+                        );
+                    }),
+                    Effect.allWith({ batching: true })
+                )
+            )
+        );
+    return { getDataInRange, subscribeToDataInRange, getTableNamesInRange, getPipelineStepNamesInRange } as const;
 });
 
 export class Database extends Effect.Service<Database>()("app/Database", {
