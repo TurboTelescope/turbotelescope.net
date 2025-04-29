@@ -5,6 +5,7 @@
         "compat",
         "createdb",
         "devcontainers",
+        "dropdb",
         "Fltr",
         "headlessui",
         "lightcurve",
