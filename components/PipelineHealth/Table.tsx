@@ -1,11 +1,11 @@
 "use client";
 
-import { useRxSuspenseSuccess, useRxValue } from "@effect-rx/rx-react";
-import { DateTime, HashSet } from "effect";
+import { useRxSuspenseSuccess } from "@effect-rx/rx-react";
+import { DateTime } from "effect";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 
-import { steps2queryRx, tableDataRx } from "@/components/PipelineHealth/rx";
+import { tableDataRx } from "@/components/PipelineHealth/rx";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -18,7 +18,6 @@ import { splitLiteral } from "@/services/Domain";
 export const getSciURL = (filePath: string): string => {
     const start = filePath.indexOf("telescope_");
     const end = filePath.lastIndexOf(".fits");
-
     if (start !== -1 && end !== -1 && end > start) {
         const ImgName = filePath.substring(start + "telescope_".length, end);
         return "http://popcorn.spa.umn.edu/center_cutouts/sci_cutouts/centcut_telescope_" + ImgName + ".webp";
@@ -30,7 +29,6 @@ export const getSciURL = (filePath: string): string => {
 export const getDiffURL = (filePath: string): string => {
     const start = filePath.indexOf("telescope_");
     const end = filePath.lastIndexOf(".fits");
-
     if (start !== -1 && end !== -1 && end > start) {
         const ImgName = filePath.substring(start + "telescope_".length, end);
         return "http://popcorn.spa.umn.edu/center_cutouts/diff_cutouts/diff_centcut_telescope_" + ImgName + ".webp";
@@ -39,9 +37,6 @@ export const getDiffURL = (filePath: string): string => {
     }
 };
 
-//M82 ref is differnt from all other ref types.pipe(
-//others: "name_number", i.e. IC_1613"
-//M82: "M82"
 export const getRefURL = (
     filePath:
         | `${string}telescope_g_${string}_${string}_${number}_${string}.fits`
@@ -49,30 +44,14 @@ export const getRefURL = (
 ): string => {
     const test = splitLiteral(filePath, "telescope_")[1];
     const [redOrGreen, a, b] = splitLiteral(test, "_");
-    if (b == "2025" || b == "2024") {
-        return (
-            "http://popcorn.spa.umn.edu/center_cutouts/ref_cutouts/ref_centcut_telescope_" +
-            redOrGreen +
-            "_" +
-            a +
-            ".webp"
-        );
+    if (b === "2025" || b === "2024") {
+        return `http://popcorn.spa.umn.edu/center_cutouts/ref_cutouts/ref_centcut_telescope_${redOrGreen}_${a}.webp`;
     }
-    return (
-        "http://popcorn.spa.umn.edu/center_cutouts/ref_cutouts/ref_centcut_telescope_" +
-        redOrGreen +
-        "_" +
-        a +
-        b +
-        ".webp"
-    );
+    return `http://popcorn.spa.umn.edu/center_cutouts/ref_cutouts/ref_centcut_telescope_${redOrGreen}_${a}${b}.webp`;
 };
-//{/* {row.status == "Yes" ? "View Image" : ""} */}
-//Sci
+
 export function RunsTable() {
     const tableData = useRxSuspenseSuccess(tableDataRx).value;
-    const steps2query = useRxValue(steps2queryRx);
-    const filterTableData = tableData.filter(({ pipelineStepName }) => HashSet.has(steps2query, pipelineStepName));
 
     return (
         <Table>
@@ -88,10 +67,10 @@ export function RunsTable() {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {filterTableData.map((row, index) => (
+                {tableData.map((row, index) => (
                     <TableRow key={index}>
                         <TableCell className="font-medium">{DateTime.formatIso(row.run)}</TableCell>
-                        <TableCell>{row.shortPipelineStepName}</TableCell>
+                        <TableCell>{row.pipelineStepName}</TableCell>
                         <TableCell>{row.processingTime}</TableCell>
                         <TableCell>{row.file}</TableCell>
                         <TableCell>
@@ -110,43 +89,14 @@ export function RunsTable() {
                                     <ChevronDown />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    <Link
-                                        key={1}
-                                        href={{
-                                            pathname: getSciURL(row.file),
-                                        }}
-                                        target="_blank"
-                                    >
-                                        <DropdownMenuItem>
-                                            {/* {row.status == "Yes" ? "View Image" : ""} */}
-                                            Sci
-                                        </DropdownMenuItem>
+                                    <Link href={getSciURL(row.file)} target="_blank">
+                                        <DropdownMenuItem>Sci</DropdownMenuItem>
                                     </Link>
-
-                                    <Link
-                                        key={2}
-                                        href={{
-                                            pathname: getSciURL(row.file),
-                                        }}
-                                        target="_blank"
-                                    >
-                                        <DropdownMenuItem>
-                                            {/* {row.status == "Yes" ? "View Image" : ""} */}
-                                            Diff
-                                        </DropdownMenuItem>
+                                    <Link href={getDiffURL(row.file)} target="_blank">
+                                        <DropdownMenuItem>Diff</DropdownMenuItem>
                                     </Link>
-
-                                    <Link
-                                        key={3}
-                                        href={{
-                                            pathname: getSciURL(row.file),
-                                        }}
-                                        target="_blank"
-                                    >
-                                        <DropdownMenuItem>
-                                            {/* {row.status == "Yes" ? "View Image" : ""} */}
-                                            Ref
-                                        </DropdownMenuItem>
+                                    <Link href={getRefURL(row.file)} target="_blank">
+                                        <DropdownMenuItem>Ref</DropdownMenuItem>
                                     </Link>
                                 </DropdownMenuContent>
                             </DropdownMenu>

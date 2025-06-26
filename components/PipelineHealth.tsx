@@ -1,7 +1,7 @@
 "use client";
 
 import { Result, Rx, useRxInitialValues, useRxValue } from "@effect-rx/rx-react";
-import { Cause, DateTime, Exit, Function } from "effect";
+import { Cause, DateTime, Duration, Effect, Exit, Function } from "effect";
 import { Suspense } from "react";
 
 import { AggregateBySelector } from "@/components/PipelineHealth/AggregateBySelector";
@@ -10,7 +10,7 @@ import { FromUntilRange } from "@/components/PipelineHealth/FromUntilRange";
 import { LocaleSelector } from "@/components/PipelineHealth/LocaleSelector";
 import { PipelineStepHistogram } from "@/components/PipelineHealth/PipelineStepHistogram";
 import { AverageProcessingTimeLineChart } from "@/components/PipelineHealth/RunTimeHist";
-import { Steps2querySelector } from "@/components/PipelineHealth/StepsFilter";
+//import { Steps2querySelector } from "@/components/PipelineHealth/StepsFilter";
 import { RunsTable } from "@/components/PipelineHealth/Table";
 import { fromRx, localeRx, totalsRx, untilRx } from "@/components/PipelineHealth/rx";
 
@@ -55,7 +55,17 @@ export function PipelineHealth({
     ]);
 
     // Gets
-    const from = useRxValue(fromRx).pipe(Result.getOrThrow);
+        const from = useRxValue(fromRx).pipe(
+      Result.getOrElse(() =>
+        Effect.runSync(
+          Effect.gen(function* () {
+            const now = yield* DateTime.now;
+            const aWeekAgo = DateTime.subtractDuration(now, Duration.days(7));
+            return aWeekAgo;
+          })
+        )
+      )
+    );
     const until = useRxValue(untilRx).pipe(Result.getOrThrow);
     const totals = useRxValue(totalsRx).pipe(
         Result.getOrElse(() => ({
@@ -100,9 +110,6 @@ export function PipelineHealth({
                 </div>
                 <div className="mx-1">
                     <LocaleSelector />
-                </div>
-                <div className="mx-1">
-                    <Steps2querySelector />
                 </div>
             </div>
             <span className="flex justify-center my-4 text-sm text-muted-foreground">

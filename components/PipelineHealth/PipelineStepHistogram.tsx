@@ -1,13 +1,13 @@
 "use client";
 
 import { useRxSuspenseSuccess } from "@effect-rx/rx-react";
-import { Array, Function, Option, Record, Schema, Tuple } from "effect";
+import { Array, Function, HashSet, Option, Record, Tuple } from "effect";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { rowsRx } from "@/components/PipelineHealth/rx";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { PipelineStepName, ShortPipelineName } from "@/services/Domain";
+import { PipelineStepName } from "@/services/Domain";
 
 const chart1 = "percentPipelineFailure" as const;
 
@@ -20,7 +20,7 @@ export const chartConfigs = {
 } satisfies ChartConfig;
 
 export type MappedData = Array<{
-    pipelineStep: typeof PipelineStepName.Type;
+    pipelineStep: string;
     [chart1]: number;
 }>;
 
@@ -31,23 +31,23 @@ export function PipelineStepHistogram() {
         Array.partition(rows, ({ success }) => success),
         Tuple.getFirst,
         Array.groupBy(({ pipelineStep }) => pipelineStep),
-        Record.map((rows, key) => ({ [chart1]: rows.length, pipelineStep: key as typeof PipelineStepName.Type }))
+        Record.map((rows, key) => ({ [chart1]: rows.length, pipelineStep: key }))
     );
 
-    const buckets = PipelineStepName.literals;
+    const allStepNames = globalThis.Array.from(
+    HashSet.fromIterable(Array.map(rows, (row) => row.pipelineStep))
+);
+
     const bucketsWithFailures = Function.pipe(
-        buckets,
-        Array.map((bucketIdentifier) => {
-            const group = Record.get(chartData, bucketIdentifier).pipe(
-                Option.getOrElse(() => ({ pipelineStep: bucketIdentifier, [chart1]: 0 }))
-            );
-            return group;
-        })
+        allStepNames,
+        Array.map((bucketIdentifier) =>
+            Option.getOrElse(() => ({ pipelineStep: bucketIdentifier, [chart1]: 0 }))(
+                Record.get(chartData, bucketIdentifier)
+            )
+        )
     );
 
-    const sorted = bucketsWithFailures.sort(
-        (a, b) => PipelineStepName.literals.indexOf(a.pipelineStep) - PipelineStepName.literals.indexOf(b.pipelineStep)
-    );
+    const sorted = bucketsWithFailures.sort((a, b) => a.pipelineStep.localeCompare(b.pipelineStep));
 
     return (
         <Card>
@@ -73,13 +73,16 @@ export function PipelineStepHistogram() {
                             tickLine={true}
                             axisLine={false}
                             tickMargin={8}
-                            tickFormatter={(longName: typeof PipelineStepName.Type) =>
-                                Schema.decodeSync(ShortPipelineName)(longName)
-                            }
+                            tickFormatter={(name) => `${name}`}
                         />
-                        <YAxis tickLine={true} axisLine={false} tickMargin={8} tickFormatter={(value) => `${value}`} />
+                        <YAxis
+                            tickLine={true}
+                            axisLine={false}
+                            tickMargin={8}
+                            tickFormatter={(value) => `${value}`}
+                        />
                         <ChartTooltip content={<ChartTooltipContent className="w-[275px]" />} />
-                        <Bar dataKey={chart1} type="monotone" fill={"#0000FF"} fillOpacity={0.5} strokeWidth={2} />
+                        <Bar dataKey={chart1} type="monotone" fill="#0000FF" fillOpacity={0.5} strokeWidth={2} />
                     </BarChart>
                 </ChartContainer>
             </CardContent>
