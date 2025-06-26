@@ -25,7 +25,7 @@ export default [
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended",
         "plugin:@effect/recommended",
-        "plugin:prettier/recommended",
+        // "plugin:prettier/recommended",
         "next/core-web-vitals",
         "next/typescript"
     ),
@@ -33,7 +33,7 @@ export default [
         plugins: {
             "sort-destructure-keys": sortDestructureKeys,
             "simple-import-sort": simpleImportSort,
-            prettier: prettierPlugin,
+            // prettier: prettierPlugin,
             codegen,
         },
 

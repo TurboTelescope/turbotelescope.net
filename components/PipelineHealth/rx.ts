@@ -1,7 +1,7 @@
 "use client";
 
 import { Result, Rx } from "@effect-rx/rx-react";
-import { FetchHttpClient, HttpClient } from "@effect/platform";
+import { FetchHttpClient } from "@effect/platform";
 import {
     Array,
     Cause,
@@ -11,20 +11,18 @@ import {
     Effect,
     Either,
     Function,
-    HashSet,
     Layer,
     Match,
     Number,
     Option,
     Predicate,
     Record,
-    Schema,
     Sink,
     Stream,
 } from "effect";
 
 import { rpcClient } from "@/app/api/client";
-import { ResultRow, RunsInTimeRangeRequest, SchemaName } from "@/services/Domain";
+import { ResultRow, RunsInTimeRangeRequest } from "@/services/Domain";
 
 /** Rx runtime. */
 const runtime = Rx.runtime(
