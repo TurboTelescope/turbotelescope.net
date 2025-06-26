@@ -24,7 +24,7 @@ import {
 } from "effect";
 
 import { rpcClient } from "@/app/api/client";
-import { PipelineStepName, ResultRow, RunsInTimeRangeRequest, SchemaName } from "@/services/Domain";
+import { ResultRow, RunsInTimeRangeRequest, SchemaName } from "@/services/Domain";
 
 /** Rx runtime. */
 const runtime = Rx.runtime(
@@ -222,7 +222,7 @@ export const tableDataRx = runtime.rx((ctx) =>
 
         const simplifiedRows = selectedRows.map((row) => ({
             run: row.date,
-            file: row.filePath,
+            file: row.filepath,
             message: row.completion,
             schemaName: row.sourceTable,
             processingTime: row.processingTime,

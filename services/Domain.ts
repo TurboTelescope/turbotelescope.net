@@ -227,7 +227,7 @@ export class SchemaName extends Schema.transformOrFail(
 //     }
 // ) {}
 
-export const PipelineStepName = Schema.String;
+// export const PipelineStepName = Schema.String;
 
 
 /** Schema for Image Status tables */
@@ -235,26 +235,13 @@ export class ImageStatusTableRow extends Schema.Class<ImageStatusTableRow>("Imag
     imageId: Schema.Number,
     pipelineStep: Schema.String,
     processingTime: Schema.Number,
-    completion: Schema.String,
+    completion: Schema.NullOr(Schema.String),
 }) { }
 
 /** Schema for Images Table rows tables */
 export class ImagesTableRow extends Schema.Class<ImagesTableRow>("ImagesTableRow")({
     imageId: Schema.Number,
-    filePath: Schema.TemplateLiteral(
-        Schema.String,
-        Schema.Literal("telescope_"),
-        Schema.Literal("r", "g"),
-        Schema.Literal("_"),
-        Schema.String,
-        Schema.Literal("_"),
-        Schema.String,
-        Schema.Literal("_"),
-        Schema.Number,
-        Schema.Literal("_"),
-        Schema.String,
-        Schema.Literal(".fits")
-    ),
+    filepath: Schema.optional(Schema.String),
     // object_id: Schema.String,
     // ra: Schema.NullOr(Schema.Number),
     // dec: Schema.NullOr(Schema.Number),

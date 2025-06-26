@@ -7,7 +7,6 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { rowsRx } from "@/components/PipelineHealth/rx";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { PipelineStepName } from "@/services/Domain";
 
 const chart1 = "percentPipelineFailure" as const;
 

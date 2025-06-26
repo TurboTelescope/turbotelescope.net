@@ -15,7 +15,12 @@ import {
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { splitLiteral } from "@/services/Domain";
 
-export const getSciURL = (filePath: string): string => {
+export const getSciURL = (filePath: string | undefined): string => {
+    // FIXME: handle undefined
+    if (filePath === undefined) {
+        return "";
+    }
+
     const start = filePath.indexOf("telescope_");
     const end = filePath.lastIndexOf(".fits");
     if (start !== -1 && end !== -1 && end > start) {
@@ -26,7 +31,12 @@ export const getSciURL = (filePath: string): string => {
     }
 };
 
-export const getDiffURL = (filePath: string): string => {
+export const getDiffURL = (filePath: string | undefined): string => {
+    // FIXME: handle undefined
+    if (filePath === undefined) {
+        return "";
+    }
+
     const start = filePath.indexOf("telescope_");
     const end = filePath.lastIndexOf(".fits");
     if (start !== -1 && end !== -1 && end > start) {
@@ -38,10 +48,13 @@ export const getDiffURL = (filePath: string): string => {
 };
 
 export const getRefURL = (
-    filePath:
-        | `${string}telescope_g_${string}_${string}_${number}_${string}.fits`
-        | `${string}telescope_r_${string}_${string}_${number}_${string}.fits`
+    filePath: string | undefined
 ): string => {
+    // FIXME: handle undefined
+    if (filePath === undefined) {
+        return "";
+    }
+
     const test = splitLiteral(filePath, "telescope_")[1];
     const [redOrGreen, a, b] = splitLiteral(test, "_");
     if (b === "2025" || b === "2024") {
@@ -76,7 +89,7 @@ export function RunsTable() {
                         <TableCell>
                             <Link
                                 href={{
-                                    pathname: `/IHW/verbose-logs/${row.file.includes("tlenaii") ? "tlenaii" : "popcorn"}/${row.schemaName}`,
+                                    pathname: `/IHW/verbose-logs/${row.file?.includes("tlenaii") ? "tlenaii" : "popcorn"}/${row.schemaName}`,
                                 }}
                                 target="_blank"
                             >
