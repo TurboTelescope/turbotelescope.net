@@ -16,7 +16,7 @@ export default async function Page() {
 
     const serverFrom = Function.pipe(
         Effect.runSync(DateTime.now),
-        DateTime.subtractDuration(Duration.hours(72)),
+        DateTime.subtractDuration(Duration.hours(192)),
         DateTime.setZone(timezone)
     );
 

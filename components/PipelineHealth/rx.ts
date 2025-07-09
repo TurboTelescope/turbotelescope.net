@@ -23,7 +23,7 @@ import {
 
 import { rpcClient } from "@/app/api/client";
 import { AllPipelineStepNamesRequest, ResultRow, RunsInTimeRangeRequest } from "@/services/Domain";
-import { HashSet } from "effect/Schema";
+
 
 /** Rx runtime. */
 const runtime = Rx.runtime(
@@ -54,7 +54,7 @@ export const fromRx = Rx.fn<Date | DateTime.DateTime | undefined, Cause.IllegalA
                 Match.value(input),
                 Match.when(Predicate.isDate, (d) => DateTime.make(d)),
                 Match.when(DateTime.isDateTime, (d) => Option.some(d)),
-                Match.when(Predicate.isUndefined, (_) => Option.some(now)),
+                Match.when(Predicate.isUndefined, (_) => Option.some(DateTime.subtractDuration(now, Duration.days(7)))),
                 Match.exhaustive
             );
 

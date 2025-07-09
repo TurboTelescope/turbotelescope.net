@@ -73,6 +73,7 @@ export default [
                 },
             ],
             "@effect/dprint": "off",
+            "@typescript-eslint/array-type": "off",
         },
     },
 ];

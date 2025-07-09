@@ -66,7 +66,17 @@ export function PipelineHealth({
         )
       )
     );
-    const until = useRxValue(untilRx).pipe(Result.getOrThrow);
+
+    //TODO: replaced getOrThrow, but need to ensure this is valid long-term solution
+    const until = useRxValue(untilRx).pipe(
+  Result.getOrElse(() =>
+    Effect.runSync(
+      Effect.gen(function* () {
+        return yield* DateTime.now;
+      })
+    )
+  )
+);
     const totals = useRxValue(totalsRx).pipe(
         Result.getOrElse(() => ({
             successRate: 0,
