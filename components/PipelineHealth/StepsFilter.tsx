@@ -8,10 +8,10 @@
 
 // "use client";
 
-// import { useRx } from "@effect-rx/rx-react";
-// import { HashSet } from "effect";
+// import { Result, useRx, useRxValue } from "@effect-rx/rx-react";
+// import { Effect, HashSet } from "effect";
 
-// import { steps2queryRx } from "@/components/PipelineHealth/rx";
+// import { allPipelineStepNamesRx, steps2queryRx } from "@/components/PipelineHealth/rx";
 // import { Button } from "@/components/ui/button";
 // import {
 //     DropdownMenu,
@@ -20,10 +20,17 @@
 //     DropdownMenuItem,
 //     DropdownMenuTrigger,
 // } from "@/components/ui/dropdown-menu";
-// import { PipelineStepName } from "@/services/Domain";
+// import { Database } from "@/services/Database";
+
+// // const allPipelineStepNames: string[] = []
 
 // export function Steps2querySelector() {
 //     const [steps2query, setSteps2query] = useRx(steps2queryRx);
+//     const allPipelineStepNames = useRxValue(allPipelineStepNamesRx);
+
+//     if (!Result.isSuccess(allPipelineStepNames)) {
+//         return <>Loading pipeline step names</>
+//     }
 
 //     return (
 //         <DropdownMenu>
@@ -36,7 +43,7 @@
 //                 <DropdownMenuItem
 //                     onSelect={(event) => {
 //                         event.preventDefault();
-//                         setSteps2query(HashSet.fromIterable(PipelineStepName.literals));
+//                         setSteps2query(HashSet.empty());
 //                     }}
 //                 >
 //                     Select All
@@ -49,7 +56,7 @@
 //                 >
 //                     Unselect All
 //                 </DropdownMenuItem>
-//                 {PipelineStepName.literals.map((stepName, i) => (
+//                 {allPipelineStepNames.value.map((stepName, i) => (
 //                     <DropdownMenuCheckboxItem
 //                         key={i}
 //                         checked={HashSet.has(steps2query, stepName)}

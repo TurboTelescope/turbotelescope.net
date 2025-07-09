@@ -3,6 +3,7 @@ import { Effect, Function, Stream } from "effect";
 
 import { Database } from "@/services/Database";
 import {
+    AllPipelineStepNamesRequest,
     RunsInTimeRangeRequest,
     SubscribeToRunsRequest,
     VerboseLogRequest,
@@ -20,7 +21,8 @@ export const databaseRouter = RpcRouter.make(
             Stream.unwrap,
             Stream.orDie
         )
-    )
+    ),
+    Rpc.effect(AllPipelineStepNamesRequest, () => Database.pipe(Effect.flatMap((db) => db.getAllPipelineStepNames)).pipe(Effect.orDie))
 );
 
 export const verboseLogsRouter = RpcRouter.make(

@@ -22,7 +22,8 @@ import {
 } from "effect";
 
 import { rpcClient } from "@/app/api/client";
-import { ResultRow, RunsInTimeRangeRequest } from "@/services/Domain";
+import { AllPipelineStepNamesRequest, ResultRow, RunsInTimeRangeRequest } from "@/services/Domain";
+import { HashSet } from "effect/Schema";
 
 /** Rx runtime. */
 const runtime = Rx.runtime(
@@ -95,6 +96,12 @@ export const aggregateByRx = Rx.make<Exclude<DateTime.DateTime.UnitPlural, "mill
 // export const steps2queryRx = Rx.make<HashSet.HashSet<string>>(
 //     HashSet.fromIterable(PipelineStepName)
 // );
+
+export const allPipelineStepNamesRx: Rx.Rx<Result.Result<readonly string[], never>> = runtime.rx(() => Effect.Do.pipe(
+    Effect.let("request", () => new AllPipelineStepNamesRequest()),
+    Effect.bind("client", () => rpcClient),
+    Effect.flatMap(({ client, request }) => client(request)),
+))
 
 export const rowsRx: Rx.Rx<Result.Result<Array<ResultRow>, Cause.IllegalArgumentException>> = runtime.rx(
     (ctx) =>

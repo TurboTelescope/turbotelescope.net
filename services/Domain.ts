@@ -1,6 +1,7 @@
 import { Rpc } from "@effect/rpc";
 import { DateTime, Effect, Function, Match, Option, ParseResult, Schema } from "effect";
 
+
 /** @internal */
 export type Tail<T extends ReadonlyArray<unknown>> = T extends
     | [infer _First, ...infer Rest]
@@ -264,6 +265,12 @@ export class ResultRow extends Schema.Class<ResultRow>("ResultRow")({
         return Schema.decodeSync(SchemaName)(this.sourceTable);
     }
 }
+
+export class AllPipelineStepNamesRequest extends Schema.TaggedRequest<AllPipelineStepNamesRequest>()("AllPipelineStepNamesRequest", {
+    failure: Schema.Never,
+    success: Schema.Array(Schema.String),
+    payload: {},
+}) { }
 
 export class RunsInTimeRangeRequest extends Schema.TaggedRequest<RunsInTimeRangeRequest>()("RunsInTimeRangeRequest", {
     failure: Schema.Never,

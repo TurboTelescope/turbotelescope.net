@@ -50,8 +50,18 @@ const make = Effect.gen(function* () {
                 Effect.allWith({ concurrency: "unbounded" })
             )
         );
-    //Getting long and short names from the database
-    //const getPipelineStepNames = SqlResolver.grouped("getPipelineStepNames", {...
+
+    //GET PIPELINE STEP NAMES
+    const getAllPipelineStepNames: Effect.Effect<
+        Array<string>,
+        SqlError.SqlError,
+        never
+    > = Effect.map(
+        sql<{ step_name: string }>`
+            SELECT step_name, status FROM pipeline_info.all_pipeline_step_names;
+        `,
+        (rows) => rows.map((row) => row.step_name)
+    );
 
     //rm: IMAGES.exposure_time, IMAGES.observation_date,
     const getDataByTableName = SqlResolver.grouped("getDataByTableName", {
@@ -137,11 +147,11 @@ const make = Effect.gen(function* () {
             return Stream.concat(backlog, reactive);
         }).pipe(Stream.unwrap);
 
-    return { getDataInRange, subscribeToDataInRange, getTableNamesInRange } as const;
+    return { getDataInRange, subscribeToDataInRange, getTableNamesInRange, getAllPipelineStepNames } as const;
 });
 
 export class Database extends Effect.Service<Database>()("app/Database", {
     accessors: false,
     dependencies: [PgLive],
     effect: make,
-}) {}
+}) { }
