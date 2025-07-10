@@ -55,28 +55,28 @@ export function PipelineHealth({
     ]);
 
     // Gets
-        const from = useRxValue(fromRx).pipe(
-      Result.getOrElse(() =>
-        Effect.runSync(
-          Effect.gen(function* () {
-            const now = yield* DateTime.now;
-            const aWeekAgo = DateTime.subtractDuration(now, Duration.days(7));
-            return aWeekAgo;
-          })
+    const from = useRxValue(fromRx).pipe(
+        Result.getOrElse(() =>
+            Effect.runSync(
+                Effect.gen(function* () {
+                    const now = yield* DateTime.now;
+                    const aWeekAgo = DateTime.subtractDuration(now, Duration.days(7));
+                    return aWeekAgo;
+                })
+            )
         )
-      )
     );
 
     //TODO: replaced getOrThrow, but need to ensure this is valid long-term solution
     const until = useRxValue(untilRx).pipe(
-  Result.getOrElse(() =>
-    Effect.runSync(
-      Effect.gen(function* () {
-        return yield* DateTime.now;
-      })
-    )
-  )
-);
+        Result.getOrElse(() =>
+            Effect.runSync(
+                Effect.gen(function* () {
+                    return yield* DateTime.now;
+                })
+            )
+        )
+    );
     const totals = useRxValue(totalsRx).pipe(
         Result.getOrElse(() => ({
             successRate: 0,
