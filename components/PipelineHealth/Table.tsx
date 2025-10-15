@@ -47,9 +47,7 @@ export const getDiffURL = (filePath: string | undefined): string => {
     }
 };
 
-export const getRefURL = (
-    filePath: string | undefined
-): string => {
+export const getRefURL = (filePath: string | undefined): string => {
     // FIXME: handle undefined
     if (filePath === undefined) {
         return "";
@@ -89,7 +87,7 @@ export function RunsTable() {
                         <TableCell>
                             <Link
                                 href={{
-                                    pathname: `/IHW/verbose-logs/${row.file?.includes("tlenaii") ? "tlenaii" : "popcorn"}/${row.schemaName}`,
+                                    pathname: `/verbose-logs/${row.file?.includes("tlenaii") ? "tlenaii" : "popcorn"}/${row.schemaName}`,
                                 }}
                                 target="_blank"
                             >
