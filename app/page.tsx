@@ -19,7 +19,7 @@ async function getTableData(): Promise<Array<TableRow>> {
     try {
         const result = await pool.query(`
       SELECT * FROM panstarrs_pipeline.image_status
-      ORDER BY image_id DESC
+      ORDER BY image_id INC
       LIMIT 100
     `);
         return result.rows as Array<TableRow>;
