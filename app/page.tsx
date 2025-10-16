@@ -5,6 +5,8 @@ const pool = new Pool({
         "postgresql://neondb_owner:npg_KX2l1sVWRuDB@ep-winter-unit-ad3tfw03-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require",
 });
 
+export const revalidate = 0;
+
 interface TableRow {
     image_id: number;
     file_path: string;
