@@ -1,11 +1,8 @@
 import { Pool } from "pg";
 
 const pool = new Pool({
-    host: "wicapi.spa.umn.edu",
-    port: 5432,
-    database: "turbo",
-    user: "turbo",
-    password: "TURBOTURBO",
+    connectionString:
+        "postgresql://neondb_owner:npg_KX2l1sVWRuDB@ep-winter-unit-ad3tfw03-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require",
 });
 
 interface TableRow {
